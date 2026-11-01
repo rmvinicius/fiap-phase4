@@ -1,0 +1,81 @@
+name: "🔧 Deploy Gitops"
+
+on:
+  push:
+    branches: [ develop, staging, main ]
+    paths:
+      - 'gitops/argocd/applications/**'
+      - '.github/workflows/gitops.yml'
+  pull_request:
+    branches: [ develop, staging, main ]
+    paths:
+      - 'gitops/argocd/applications/**'
+      - '.github/workflows/gitops.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [ DEV, STG, PRD ]
+        default: DEV
+
+jobs:
+  changes:
+    name: "🔍 Detect changes"
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.resolve.outputs.ENV }}
+    steps:
+      - name: 📥 Checkout (full history)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Resolve environment
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ENV=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+          else
+            case "${{ github.ref_name }}" in
+              develop) echo "ENV=DEV"  >> "$GITHUB_OUTPUT" ;;
+              staging)  echo "ENV=STG"  >> "$GITHUB_OUTPUT" ;;
+              main)     echo "ENV=PRD" >> "$GITHUB_OUTPUT" ;;
+            esac
+          fi
+
+  install-gitops:
+    name: "📦 Install Gitops"
+    needs: [changes]
+    runs-on: [self-hosted, eks, private]
+    env:
+      AWS_REGION: "us-east-1"
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+
+      - name: 🔧 Configure AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', needs.changes.outputs.environment)] }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', needs.changes.outputs.environment)] }}
+          aws-session-token: ${{ secrets[format('AWS_SESSION_TOKEN_{0}', needs.changes.outputs.environment)] }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔧 Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: 🔧 Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets[format('EKS_CLUSTER_NAME_{0}', needs.changes.outputs.environment)] }}
+
+      - name: 🔍 Verify Connection & Deploy
+        run: |
+          kubectl get nodes
+
+      - name: 📦 Install Gitops
+        run: |
+          kubectl apply -f gitops/argocd/applications/

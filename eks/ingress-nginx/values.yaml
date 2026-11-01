@@ -1,0 +1,4 @@
+controller:
+  service:
+    nodePorts:
+      http: 30080

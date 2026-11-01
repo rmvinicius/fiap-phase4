@@ -1,0 +1,41 @@
+server:
+  enabled: true
+
+  insecure: true
+  extraArgs:
+    - --insecure
+  
+  ingress:
+    enabled: false
+  service:
+    type: ClusterIP
+
+configs:
+  cm:
+    create: true
+    admin.enabled: "true"
+  rbac:
+    create: true
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:org-admin, applications, *, */*, allow
+      g, your-github-team, role:org-admin
+
+applicationSet:
+  enabled: true
+
+notifications:
+  enabled: false
+
+controller:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+      
+redis:
+  enabled: true

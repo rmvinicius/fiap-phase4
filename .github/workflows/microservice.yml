@@ -1,0 +1,193 @@
+name: "📦 Micro service"
+
+on:
+  push:
+    branches: [ develop, staging, main ]
+    paths:
+      - 'ms/analytics-service/**'
+      - 'ms/auth-service/**'
+      - 'ms/evaluation-service/**'
+      - 'ms/flag-service/**'
+      - 'ms/targeting-service/**'
+      - '.github/workflows/microservice.yml'
+      - '.github/workflows/template-python.yml'
+      - '.github/workflows/template-go.yml'
+  pull_request:
+    branches: [ develop, staging, main ]
+    paths:
+      - 'ms/analytics-service/**'
+      - 'ms/auth-service/**'
+      - 'ms/evaluation-service/**'
+      - 'ms/flag-service/**'
+      - 'ms/targeting-service/**'
+      - '.github/workflows/microservice.yml'
+      - '.github/workflows/template-python.yml'
+      - '.github/workflows/template-go.yml'
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Which service to run"
+        required: true
+        type: choice
+        options:
+          - all
+          - analytics-service
+          - auth-service
+          - evaluation-service
+          - flag-service
+          - targeting-service
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - DEV
+          - STG
+          - PRD
+        default: DEV
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+permissions:
+  contents: write
+
+jobs:
+  changes:
+    name: "🔍 Detect changes"
+    runs-on: ubuntu-latest
+    outputs:
+      analytics:  ${{ steps.filter.outputs.analytics }}
+      auth:       ${{ steps.filter.outputs.auth }}
+      evaluation: ${{ steps.filter.outputs.evaluation }}
+      flag:       ${{ steps.filter.outputs.flag }}
+      targeting:  ${{ steps.filter.outputs.targeting }}
+      environment: ${{ steps.resolve.outputs.ENV }}
+      ecr_registry: ${{ steps.set-ecr.outputs.registry }}
+    steps:
+      - name: 📥 Checkout (full history)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Resolve environment
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ENV=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+          else
+            case "${{ github.ref_name }}" in
+              develop) echo "ENV=DEV"  >> "$GITHUB_OUTPUT" ;;
+              staging)  echo "ENV=STG"  >> "$GITHUB_OUTPUT" ;;
+              main)     echo "ENV=PRD" >> "$GITHUB_OUTPUT" ;;
+            esac
+          fi
+
+      - name: 🔐 Set ECR registry
+        id: set-ecr
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+        run: echo "registry=${ECR_REGISTRY}" >> "$GITHUB_OUTPUT"
+
+      - name: 🔍 Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            analytics:
+              - 'ms/analytics-service/**'
+            auth:
+              - 'ms/auth-service/**'
+            evaluation:
+              - 'ms/evaluation-service/**'
+            flag:
+              - 'ms/flag-service/**'
+            targeting:
+              - 'ms/targeting-service/**'
+
+  # ===========================================================================
+  # Python services
+  # ===========================================================================
+  analytics-service:
+    name: "🐍 analytics-service"
+    needs: changes
+    if: |
+      needs.changes.outputs.analytics == 'true'
+      || (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'analytics-service'))
+    uses: ./.github/workflows/template-python.yml
+    with:
+      service-name: analytics-service
+      working-dir: ms/analytics-service
+      environment: ${{ needs.changes.outputs.environment }}
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      ecr-registry: ${{ needs.changes.outputs.ecr_registry }}
+      python-version: "3.11"
+    secrets: inherit
+
+  flag-service:
+    name: "🐍 flag-service"
+    needs: changes
+    if: |
+      needs.changes.outputs.flag == 'true'
+      || (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'flag-service'))
+    uses: ./.github/workflows/template-python.yml
+    with:
+      service-name: flag-service
+      working-dir: ms/flag-service
+      environment: ${{ needs.changes.outputs.environment }}
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      ecr-registry: ${{ needs.changes.outputs.ecr_registry }}
+      python-version: "3.11"
+    secrets: inherit
+
+  targeting-service:
+    name: "🐍 targeting-service"
+    needs: changes
+    if: |
+      needs.changes.outputs.targeting == 'true'
+      || (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'targeting-service'))
+    uses: ./.github/workflows/template-python.yml
+    with:
+      service-name: targeting-service
+      working-dir: ms/targeting-service
+      environment: ${{ needs.changes.outputs.environment }}
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      ecr-registry: ${{ needs.changes.outputs.ecr_registry }}
+      python-version: "3.11"
+    secrets: inherit
+
+  # ===========================================================================
+  # Go services
+  # ===========================================================================
+  auth-service:
+    name: "🔵 auth-service"
+    needs: changes
+    if: |
+      needs.changes.outputs.auth == 'true'
+      || (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'auth-service'))
+    uses: ./.github/workflows/template-go.yml
+    with:
+      service-name: auth-service
+      working-dir: ms/auth-service
+      environment: ${{ needs.changes.outputs.environment }}
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      ecr-registry: ${{ needs.changes.outputs.ecr_registry }}
+      go-version: "1.25"
+    secrets: inherit
+
+  evaluation-service:
+    name: "🔵 evaluation-service"
+    needs: changes
+    if: |
+      needs.changes.outputs.evaluation == 'true'
+      || (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'evaluation-service'))
+    uses: ./.github/workflows/template-go.yml
+    with:
+      service-name: evaluation-service
+      working-dir: ms/evaluation-service
+      environment: ${{ needs.changes.outputs.environment }}
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      ecr-registry: ${{ needs.changes.outputs.ecr_registry }}
+      go-version: "1.25"
+    secrets: inherit

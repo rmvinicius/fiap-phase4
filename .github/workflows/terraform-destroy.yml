@@ -1,0 +1,57 @@
+name: "💥 Terraform Destroy"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment to destroy"
+        required: true
+        type: choice
+        options: [ DEV, STG, PRD ]
+        default: DEV
+
+jobs:
+  destroy:
+    name: "💥 Destroy · ${{ inputs.environment }}"
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: "us-east-1"
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+
+      - name: 🔍 Resolve environment (lowercase)
+        id: env-lower
+        run: echo "LOWER=$(echo '${{ inputs.environment }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: 🔧 Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+
+      - name: 🔧 Configure AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id:     ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', inputs.environment)] }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', inputs.environment)] }}
+          aws-session-token:     ${{ secrets[format('AWS_SESSION_TOKEN_{0}', inputs.environment)] }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔧 Init
+        working-directory: terraform
+        run: terraform init -backend-config="bootstrap/remote/${{ steps.env-lower.outputs.LOWER }}-backend.tfvars"
+
+      - name: 📋 Plan destroy
+        working-directory: terraform
+        env:
+          TF_VAR_rds_password_auth_db: ${{ secrets[format('RDS_PASSWORD_AUTH_DB_{0}', inputs.environment)] }}
+          TF_VAR_rds_password_flags_db: ${{ secrets[format('RDS_PASSWORD_FLAGS_DB_{0}', inputs.environment)] }}
+          TF_VAR_rds_password_targeting_db: ${{ secrets[format('RDS_PASSWORD_TARGETING_DB_{0}', inputs.environment)] }}
+        run: terraform plan -destroy -var-file="environment/${{ steps.env-lower.outputs.LOWER }}.tfvars" -no-color -out=tfplan-destroy
+
+      - name: ⚙️ Apply destroy
+        working-directory: terraform
+        env:
+          TF_VAR_rds_password_auth_db: ${{ secrets[format('RDS_PASSWORD_AUTH_DB_{0}', inputs.environment)] }}
+          TF_VAR_rds_password_flags_db: ${{ secrets[format('RDS_PASSWORD_FLAGS_DB_{0}', inputs.environment)] }}
+          TF_VAR_rds_password_targeting_db: ${{ secrets[format('RDS_PASSWORD_TARGETING_DB_{0}', inputs.environment)] }}
+        run: terraform apply -auto-approve tfplan-destroy

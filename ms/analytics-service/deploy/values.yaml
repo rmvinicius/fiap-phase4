@@ -1,0 +1,64 @@
+name: analytics-service
+namespace: application
+port: 8005
+replicas: 1
+resources:
+  limits:
+    cpu: "200m"
+    memory: "512Mi"
+  requests:
+    cpu: "100m"
+    memory: "256Mi"
+image:
+  repository: 598450975126.dkr.ecr.us-east-1.amazonaws.com
+  name: analytics-service
+  tag: "v1.0.0-551caac5d6a7598fb43b495f24e529845ff700d8-DEV"
+  pullPolicy: IfNotPresent
+configmap:
+  PORT: "8005"
+  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/598450975126/queue-toggle-master"
+  AWS_SQS_ENDPOINT: "https://sqs.us-east-1.amazonaws.com"
+  AWS_DYNAMODB_TABLE: "ToggleMasterAnalytics"
+  AWS_DYNAMODB_ENDPOINT: "https://dynamodb.us-east-1.amazonaws.com"
+  AWS_REGION: "us-east-1"
+secrets:
+  AWS_ACCESS_KEY_ID: QVNJQVlXVlRWR0dMQTNHQ05CQ0k=
+  AWS_SECRET_ACCESS_KEY: QU5zSCt4Z3cxOXpKRmk1bnVrS0lFSGZYWWdrdlpWYTJaVHdIMlNVdg==
+  AWS_SESSION_TOKEN: SVFvSmIzSnBaMmx1WDJWakVBMGFDWFZ6TFhkbGMzUXRNaUpHTUVRQ0lIL1luMU9RTmRybWw2STBhem94cUpiT3cyUk1LZUt3UWpVbHU2b1JJcEpNQWlBa09UM3Z4ajg5YkZmK0J0UGJKUDZPY2lBRmtObEZ5Rnd0Z1pGQ2dnSVpxU3JCQWdqVy8vLy8vLy8vLy84QkVBRWFERFU1T0RRMU1EazNOVEV5TmlJTWZqN3c0REFMRTZQSC9LQXRLcFVDZVF2QkErVUNHYThIUVVPdEo3Z04rWE1VU1I5TStTU28yMnlmNXY5OEl4WDFBTGFHTytBL0Z4UU0zZGZkQ1g0WXUrVDM1NXVMb0tWclB2M2VVOStmTWxHNkNzN3ZjUUFCQkZWQ0toTU5NODBMZVRhd3ZQbnFIZlIvb08rOUNuWmdQWnBLQWl6bUhWZ0dPS0poSkZZYUJqNjF0MTg1RnZtSy9rWmkrUm9zaVNGTk1ZM2JZKzhrSlJuS0xiRkFvS05DZW1BTUFpS0ZmYW5tM3hvWE5PY3hETHluK3hPR3BHcDFPUWc0cEVLVExqbDRJc1kydGltVkp5bUI2UlpYZkE4bXZyTHBzZkljakdlNUE3ME93cUc2ZExGcEM4bXlpTW9pVUhUaFVYdGRVS2g2ZHU1NmJzc3lVS1AwQ0V0UDhuekhHL2NvOWR0bjNMRHdjT3IwdFBaVnFlcmlLQU9UbjFsU2owS3Q2SmY0WS9ldEJnOHV1ekRXa0p6VkJqcWVBZHk1WXlqUzFydjVPMnVwNXhSeG5jb3JsYU1WeEErL2V6a3VCWXA3NUJhNUYrLzFzYnZEUTBPTUZ5U2UvUUdHMThBOWJUajFHUHVOWUIyQmpXMFpwajFINDNZZHJpR0JJQmsxeHluVFlidlArMW1vUUovZ0dnbG5VMmJyeWhkclpFdFpSTjNWcDd0K2w3TnZINkNhK1U4ZDlnY2JmMElpMmJvRDE3MnRydlpVTnd4d1IxWkJHcVdPUkJNa0NtaDNTakRjTkJtcGtkeVlFdU00dkh3eQ==
+probes:
+  startup:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 9
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+service:
+  type: ClusterIP
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  averageCpuUtilization: 90
+  averageMemoryUtilization: 90
+keda:
+  enabled: true
+  type: aws-sqs-queue
+  minReplicaCount: 0
+  maxReplicaCount: 5
+  cooldownPeriod: 30
+  pollingInterval: 10
+  queueLength: "5"
+  awsRegion: "us-east-1"
+  queueURL: "queue-toggle-master"
+  awsAccessKeyId: QVNJQVlXVlRWR0dMQTNHQ05CQ0k=
+  awsSecretAccessKey: QU5zSCt4Z3cxOXpKRmk1bnVrS0lFSGZYWWdrdlpWYTJaVHdIMlNVdg==
+  awsSessionToken: SVFvSmIzSnBaMmx1WDJWakVBMGFDWFZ6TFhkbGMzUXRNaUpHTUVRQ0lIL1luMU9RTmRybWw2STBhem94cUpiT3cyUk1LZUt3UWpVbHU2b1JJcEpNQWlBa09UM3Z4ajg5YkZmK0J0UGJKUDZPY2lBRmtObEZ5Rnd0Z1pGQ2dnSVpxU3JCQWdqVy8vLy8vLy8vLy84QkVBRWFERFU1T0RRMU1EazNOVEV5TmlJTWZqN3c0REFMRTZQSC9LQXRLcFVDZVF2QkErVUNHYThIUVVPdEo3Z04rWE1VU1I5TStTU28yMnlmNXY5OEl4WDFBTGFHTytBL0Z4UU0zZGZkQ1g0WXUrVDM1NXVMb0tWclB2M2VVOStmTWxHNkNzN3ZjUUFCQkZWQ0toTU5NODBMZVRhd3ZQbnFIZlIvb08rOUNuWmdQWnBLQWl6bUhWZ0dPS0poSkZZYUJqNjF0MTg1RnZtSy9rWmkrUm9zaVNGTk1ZM2JZKzhrSlJuS0xiRkFvS05DZW1BTUFpS0ZmYW5tM3hvWE5PY3hETHluK3hPR3BHcDFPUWc0cEVLVExqbDRJc1kydGltVkp5bUI2UlpYZkE4bXZyTHBzZkljakdlNUE3ME93cUc2ZExGcEM4bXlpTW9pVUhUaFVYdGRVS2g2ZHU1NmJzc3lVS1AwQ0V0UDhuekhHL2NvOWR0bjNMRHdjT3IwdFBaVnFlcmlLQU9UbjFsU2owS3Q2SmY0WS9ldEJnOHV1ekRXa0p6VkJqcWVBZHk1WXlqUzFydjVPMnVwNXhSeG5jb3JsYU1WeEErL2V6a3VCWXA3NUJhNUYrLzFzYnZEUTBPTUZ5U2UvUUdHMThBOWJUajFHUHVOWUIyQmpXMFpwajFINDNZZHJpR0JJQmsxeHluVFlidlArMW1vUUovZ0dnbG5VMmJyeWhkclpFdFpSTjNWcDd0K2w3TnZINkNhK1U4ZDlnY2JmMElpMmJvRDE3MnRydlpVTnd4d1IxWkJHcVdPUkJNa0NtaDNTakRjTkJtcGtkeVlFdU00dkh3eQ==

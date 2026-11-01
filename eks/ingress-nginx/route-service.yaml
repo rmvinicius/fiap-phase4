@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service-backend
+  namespace: ingress
+spec:
+  type: ExternalName
+  externalName: auth-service-svc.application.svc.cluster.local
+  ports:
+  - port: 8001
+    targetPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flag-service-backend
+  namespace: ingress
+spec:
+  type: ExternalName
+  externalName: flag-service-svc.application.svc.cluster.local
+  ports:
+  - port: 8002
+    targetPort: 8002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: targeting-service-backend
+  namespace: ingress
+spec:
+  type: ExternalName
+  externalName: targeting-service-svc.application.svc.cluster.local
+  ports:
+  - port: 8003
+    targetPort: 8003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: evaluation-service-backend
+  namespace: ingress
+spec:
+  type: ExternalName
+  externalName: evaluation-service-svc.application.svc.cluster.local
+  ports:
+  - port: 8004
+    targetPort: 8004
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-service-backend
+  namespace: ingress
+spec:
+  type: ExternalName
+  externalName: analytics-service-svc.application.svc.cluster.local
+  ports:
+  - port: 8005
+    targetPort: 8005
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-service-backend
+  namespace: ingress
+spec:
+  type: ExternalName
+  externalName: argocd-server.argocd.svc.cluster.local
+  ports:
+  - port: 80
+    targetPort: 80

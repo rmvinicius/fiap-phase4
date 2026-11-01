@@ -1,0 +1,151 @@
+name: "🐍 Template · Python"
+
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        description: "Microservice name (used for image tag and labels)"
+        required: true
+        type: string
+      working-dir:
+        description: "Path to the service in the repo (e.g. ms/flag-service)"
+        required: true
+        type: string
+      python-version:
+        description: "Python version"
+        required: false
+        type: string
+        default: "3.12"
+      push-image:
+        description: "Whether to build and push the Docker image"
+        required: false
+        type: boolean
+        default: false
+      ecr-registry:
+        description: "ECR registry URL (no trailing slash)"
+        required: false
+        type: string
+        default: ""
+      environment:
+        description: "Target environment (DEV, STG, PRD) for AWS secret resolution"
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+      AWS_SESSION_TOKEN:
+        required: false
+
+jobs:
+  python-ms:
+    name: "🐍 ${{ inputs.service-name }}"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔧 Setup Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+          cache-dependency-path: ${{ inputs.working-dir }}/requirements.txt
+
+      - name: 📦 Install dependencies
+        working-directory: ${{ inputs.working-dir }}
+        run: pip install -r requirements.txt
+
+      - name: 🔍 Lint (ruff)
+        working-directory: ${{ inputs.working-dir }}
+        run: |
+          pip install ruff
+          ruff check .
+
+      - name: 🔍 SAST (bandit)
+        working-directory: ${{ inputs.working-dir }}
+        run: |
+          pip install bandit
+          bandit -r . --severity-level high
+
+      - name: 🔍 SCA (trivy fs)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '${{ inputs.working-dir }}'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL'
+
+      - name: 🧪 Test (pytest)
+        working-directory: ${{ inputs.working-dir }}
+        run: |
+          pip install pytest
+          pytest
+
+      - name: 🔧 Configure AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id:     ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', inputs.environment)] }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', inputs.environment)] }}
+          aws-session-token:     ${{ secrets[format('AWS_SESSION_TOKEN_{0}', inputs.environment)] }}
+          aws-region: us-east-1
+
+      - name: 🐳 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🐳 Build Image
+        working-directory: ${{ inputs.working-dir }}
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ inputs.service-name }}
+          IMAGE_TAG: v1.0.0-${{ github.sha }}-${{ inputs.environment }}
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+
+      - name: 🛡️ Scan image vulnerabilities (trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ steps.login-ecr.outputs.registry }}/${{ inputs.service-name }}:v1.0.0-${{ github.sha }}-${{ inputs.environment }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+
+      - name: 🐳 Push Image
+        working-directory: ${{ inputs.working-dir }}
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ inputs.service-name }}
+          IMAGE_TAG: v1.0.0-${{ github.sha }}-${{ inputs.environment }}
+        run: |
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: 📝 Update Image Tag in values.yaml
+        working-directory: ms/${{ inputs.service-name }}/deploy
+        env:
+          IMAGE_TAG: v1.0.0-${{ github.sha }}-${{ inputs.environment }}
+        run: |
+          yq -i '.image.tag = env(IMAGE_TAG)' values.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add values.yaml
+          git commit -m "chore: update image tag to ${IMAGE_TAG}" || true
+          attempt=0
+          while ! git push; do
+            attempt=$((attempt + 1))
+            if [ $attempt -ge 3 ]; then
+              echo "Push failed after 3 attempts"
+              exit 1
+            fi
+            echo "Push rejected, retrying in $((attempt * 5))s... (attempt $attempt/5)"
+            sleep $((attempt * 5))
+            git pull --rebase --autostash origin $(basename $GITHUB_REF) || true
+          done
+          

@@ -1,0 +1,58 @@
+name: auth-service
+namespace: application
+port: 8001
+replicas: 1
+resources:
+  limits:
+    cpu: "200m"
+    memory: "512Mi"
+  requests:
+    cpu: "100m"
+    memory: "256Mi"
+image:
+  repository: 598450975126.dkr.ecr.us-east-1.amazonaws.com
+  name: auth-service
+  tag: "v1.0.0-582c2e95cb19cccefabb067a95347d41eab6a6ce-DEV"
+  pullPolicy: IfNotPresent
+configmap:
+  PORT: "8001"
+secrets:
+  DATABASE_URL: cG9zdGdyZXM6Ly9hdXRoX3NlcnZpY2U6YXV0aF9zZXJ2aWNlQDIwMjZAcmRzLWRldi0wMS5jbDh5eGVmeTR3eHoudXMtZWFzdC0xLnJkcy5hbWF6b25hd3MuY29tOjU0MzIvYXV0aF9kYg==
+  MASTER_KEY: YWRtaW4ta2V5QDIwMjY=
+probes:
+  startup:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 9
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+service:
+  type: ClusterIP
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  averageCpuUtilization: 90
+  averageMemoryUtilization: 90
+keda:
+  enabled: false
+  type: ""
+  minReplicaCount: 0
+  maxReplicaCount: 5
+  cooldownPeriod: 30
+  pollingInterval: 10
+  queueLength: "5"
+  awsRegion: "us-east-1"
+  queueURL: ""
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+  awsSessionToken: ""

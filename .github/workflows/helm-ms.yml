@@ -1,0 +1,108 @@
+name: "♾️ Helm CI/CD"
+
+on:
+  push:
+    branches: [ develop, staging, main ]
+    paths:
+      - 'helm/**'
+      - '.github/workflows/helm-ci.yml'
+  pull_request:
+    branches: [ develop, staging, main ]
+    paths:
+      - 'helm/**'
+      - '.github/workflows/helm-ci.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [ DEV, STG, PRD ]
+        default: DEV
+
+jobs:
+  changes:
+    name: "🔍 Detect changes"
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.resolve.outputs.ENV }}
+    steps:
+      - name: 📥 Checkout (full history)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Resolve environment
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ENV=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+          else
+            case "${{ github.ref_name }}" in
+              develop) echo "ENV=DEV"  >> "$GITHUB_OUTPUT" ;;
+              staging)  echo "ENV=STG"  >> "$GITHUB_OUTPUT" ;;
+              main)     echo "ENV=PRD" >> "$GITHUB_OUTPUT" ;;
+            esac
+          fi
+
+  lint:
+    name: "🔍 Lint Helm Chart"
+    needs: [changes]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+
+      - name: 🔧 Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: 🔍 Lint chart with ${{ matrix.service }} values
+        working-directory: helm/microservice
+        run: |
+          helm lint .
+
+  push:
+    name: "📤 Push Helm Chart to ECR"
+    needs: [changes, lint]
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: "us-east-1"
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔧 Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: 🔧 Configure AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', needs.changes.outputs.environment)] }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', needs.changes.outputs.environment)] }}
+          aws-session-token: ${{ secrets[format('AWS_SESSION_TOKEN_{0}', needs.changes.outputs.environment)] }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🐳 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 📦 Package and Push Helm Chart
+        working-directory: helm/microservice
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          helm version
+          helm package .
+          CHART_NAME=$(yq -r '.name' Chart.yaml)
+          CHART_VERSION=$(yq -r '.version' Chart.yaml)
+          echo "Chart - ${CHART_NAME} | Version - ${CHART_VERSION}"
+          echo "Logging into Helm registry..."
+          aws ecr get-login-password --region ${{ env.AWS_REGION }}| helm registry login --username AWS --password-stdin "${REGISTRY}"
+          echo "Push to helm registry"
+          helm push "${CHART_NAME}-${CHART_VERSION}.tgz" "oci://${REGISTRY}/helm"

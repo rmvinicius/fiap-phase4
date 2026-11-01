@@ -1,0 +1,11 @@
+# Terraform
+#############
+
+# .terraform directory - stores downloaded providers and modules
+terraform/.terraform/
+terraform/.terraform*
+
+# ms
+ms/*/__pycache__/*
+ms/*/.pytest_cache/*
+ms/*/tests/__pycache__/*

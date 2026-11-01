@@ -1,0 +1,88 @@
+name: "🔧 Install Argo CD"
+
+on:
+  push:
+    branches: [ develop, staging, main ]
+    paths:
+      - 'eks/argo-cd/**'
+      - '.github/workflows/argo-cd-install.yml'
+  pull_request:
+    branches: [ develop, staging, main ]
+    paths:
+      - 'eks/argo-cd/**'
+      - '.github/workflows/argo-cd-install.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [ DEV, STG, PRD ]
+        default: DEV
+
+jobs:
+  changes:
+    name: "🔍 Detect changes"
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.resolve.outputs.ENV }}
+    steps:
+      - name: 📥 Checkout (full history)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Resolve environment
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ENV=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+          else
+            case "${{ github.ref_name }}" in
+              develop) echo "ENV=DEV"  >> "$GITHUB_OUTPUT" ;;
+              staging)  echo "ENV=STG"  >> "$GITHUB_OUTPUT" ;;
+              main)     echo "ENV=PRD" >> "$GITHUB_OUTPUT" ;;
+            esac
+          fi
+
+  install-argocd:
+    name: "📦 Install Argo CD"
+    needs: [changes]
+    runs-on: [self-hosted, eks, private]
+    env:
+      AWS_REGION: "us-east-1"
+      NAMESPACE: "argocd"
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+
+      - name: 🔧 Configure AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', needs.changes.outputs.environment)] }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', needs.changes.outputs.environment)] }}
+          aws-session-token: ${{ secrets[format('AWS_SESSION_TOKEN_{0}', needs.changes.outputs.environment)] }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔧 Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: 🔧 Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets[format('EKS_CLUSTER_NAME_{0}', needs.changes.outputs.environment)] }}
+
+      - name: 🔍 Verify Connection & Deploy
+        run: |
+          kubectl get nodes
+
+      - name: 🔍 Add Argo CD Helm repo
+        run: |
+          helm repo add argo https://argoproj.github.io/argo-helm
+          helm repo update
+
+      - name: 📦 Install Argo CD
+        working-directory: eks/argo-cd
+        run: |
+          helm upgrade --install argocd --version 10.8.3 argo/argo-cd --namespace ${{ env.NAMESPACE }} --create-namespace --values values.yaml

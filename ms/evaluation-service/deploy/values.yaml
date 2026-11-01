@@ -1,0 +1,66 @@
+name: evaluation-service
+namespace: application
+port: 8004
+replicas: 1
+resources:
+  limits:
+    cpu: "200m"
+    memory: "128Mi"
+  requests:
+    cpu: "100m"
+    memory: "32Mi"
+image:
+  repository: 598450975126.dkr.ecr.us-east-1.amazonaws.com
+  name: evaluation-service
+  tag: "v1.0.0-7081e1ad29caaa6ffe56e3bd19ef496221777ed5-DEV"
+  pullPolicy: IfNotPresent
+configmap:
+  PORT: "8004"
+  FLAG_SERVICE_URL: "http://flag-service-svc.application.svc.cluster.local:8002"
+  TARGETING_SERVICE_URL: "http://targeting-service-svc.application.svc.cluster.local:8003"
+  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/598450975126/queue-toggle-master"
+  AWS_SQS_ENDPOINT: "https://sqs.us-east-1.amazonaws.com"
+  AWS_REGION: "us-east-1"
+secrets:
+  SERVICE_API_KEY: dG1fa2V5XzkyZDMyMjNiM2JkYzk2MTZhNTA0ZWEyZTMwZTMwZjY2Yzk0OTgxZWRlMWY5NmUxZTZkYzIxNGQ0NTM1YWU0MDY=
+  AWS_ACCESS_KEY_ID: QVNJQVlXVlRWR0dMQTNHQ05CQ0k=
+  AWS_SECRET_ACCESS_KEY: QU5zSCt4Z3cxOXpKRmk1bnVrS0lFSGZYWWdrdlpWYTJaVHdIMlNVdg==
+  AWS_SESSION_TOKEN: SVFvSmIzSnBaMmx1WDJWakVBMGFDWFZ6TFhkbGMzUXRNaUpHTUVRQ0lIL1luMU9RTmRybWw2STBhem94cUpiT3cyUk1LZUt3UWpVbHU2b1JJcEpNQWlBa09UM3Z4ajg5YkZmK0J0UGJKUDZPY2lBRmtObEZ5Rnd0Z1pGQ2dnSVpxU3JCQWdqVy8vLy8vLy8vLy84QkVBRWFERFU1T0RRMU1EazNOVEV5TmlJTWZqN3c0REFMRTZQSC9LQXRLcFVDZVF2QkErVUNHYThIUVVPdEo3Z04rWE1VU1I5TStTU28yMnlmNXY5OEl4WDFBTGFHTytBL0Z4UU0zZGZkQ1g0WXUrVDM1NXVMb0tWclB2M2VVOStmTWxHNkNzN3ZjUUFCQkZWQ0toTU5NODBMZVRhd3ZQbnFIZlIvb08rOUNuWmdQWnBLQWl6bUhWZ0dPS0poSkZZYUJqNjF0MTg1RnZtSy9rWmkrUm9zaVNGTk1ZM2JZKzhrSlJuS0xiRkFvS05DZW1BTUFpS0ZmYW5tM3hvWE5PY3hETHluK3hPR3BHcDFPUWc0cEVLVExqbDRJc1kydGltVkp5bUI2UlpYZkE4bXZyTHBzZkljakdlNUE3ME93cUc2ZExGcEM4bXlpTW9pVUhUaFVYdGRVS2g2ZHU1NmJzc3lVS1AwQ0V0UDhuekhHL2NvOWR0bjNMRHdjT3IwdFBaVnFlcmlLQU9UbjFsU2owS3Q2SmY0WS9ldEJnOHV1ekRXa0p6VkJqcWVBZHk1WXlqUzFydjVPMnVwNXhSeG5jb3JsYU1WeEErL2V6a3VCWXA3NUJhNUYrLzFzYnZEUTBPTUZ5U2UvUUdHMThBOWJUajFHUHVOWUIyQmpXMFpwajFINDNZZHJpR0JJQmsxeHluVFlidlArMW1vUUovZ0dnbG5VMmJyeWhkclpFdFpSTjNWcDd0K2w3TnZINkNhK1U4ZDlnY2JmMElpMmJvRDE3MnRydlpVTnd4d1IxWkJHcVdPUkJNa0NtaDNTakRjTkJtcGtkeVlFdU00dkh3eQ==
+  REDIS_URL: cmVkaXM6Ly9yZWRpcy1kZXYtMDEuMmpoYnJyLjAwMDEudXNlMS5jYWNoZS5hbWF6b25hd3MuY29tOjYzNzk=
+probes:
+  startup:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 9
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+service:
+  type: ClusterIP
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  averageCpuUtilization: 10
+  averageMemoryUtilization: 10
+keda:
+  enabled: false
+  type: ""
+  minReplicaCount: 0
+  maxReplicaCount: 5
+  cooldownPeriod: 30
+  pollingInterval: 10
+  queueLength: ""
+  awsRegion: "us-east-1"
+  queueURL: ""
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+  awsSessionToken: ""

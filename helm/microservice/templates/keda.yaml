@@ -1,0 +1,51 @@
+{{- if .Values.keda.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.name }}-keda-secrets
+  namespace: {{ .Values.namespace }}
+type: Opaque
+data:
+  AWS_ACCESS_KEY_ID: {{ .Values.keda.awsAccessKeyId }}
+  AWS_SECRET_ACCESS_KEY: {{ .Values.keda.awsSecretAccessKey }}
+  AWS_SESSION_TOKEN: {{ .Values.keda.awsSessionToken }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ .Values.name }}-keda-trigger-auth-aws-credentials
+  namespace: {{ .Values.namespace }}
+spec:
+  secretTargetRef:
+  - parameter: awsAccessKeyID
+    name: {{ .Values.name }}-keda-secrets
+    key: AWS_ACCESS_KEY_ID
+  - parameter: awsSecretAccessKey
+    name: {{ .Values.name }}-keda-secrets
+    key: AWS_SECRET_ACCESS_KEY
+  - parameter: awsSessionToken
+    name: {{ .Values.name }}-keda-secrets
+    key: AWS_SESSION_TOKEN
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Values.name }}-keda-sqs-scale
+  namespace: {{ .Values.namespace }}
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: {{ .Values.name }}
+  minReplicaCount: {{ .Values.keda.minReplicaCount }}
+  maxReplicaCount: {{ .Values.keda.maxReplicaCount }}
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod }}
+  pollingInterval: {{ .Values.keda.pollingInterval }}
+  triggers:
+  - type: {{ .Values.keda.type }}
+    authenticationRef:
+      name: {{ .Values.name }}-keda-trigger-auth-aws-credentials
+    metadata:
+      queueURL: {{ .Values.keda.queueURL }}
+      queueLength: {{ .Values.keda.queueLength | quote }}
+      awsRegion: {{ .Values.keda.awsRegion | quote }}
+{{- end }}
