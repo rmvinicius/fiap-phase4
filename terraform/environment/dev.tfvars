@@ -139,7 +139,7 @@ eks_node_groups = [
     max_size      = 4
   }
 ]
-eks_role_arn      = "arn:aws:iam::598450975126:role/LabRole"
+eks_role_arn      = "arn:aws:iam::218443855829:role/LabRole"
 eks_capacity_type = "SPOT"
 
 ### DYNAMODB
