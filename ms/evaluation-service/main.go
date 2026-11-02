@@ -113,7 +113,7 @@ func main() {
 			tp := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exp), sdktrace.WithResource(res))
 			otel.SetTracerProvider(tp)
 			otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-			defer tp.Shutdown(ctx)
+			defer func() { _ = tp.Shutdown(ctx) }()
 		}
 	}
 
