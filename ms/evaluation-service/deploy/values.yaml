@@ -21,6 +21,7 @@ configmap:
   AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/598450975126/queue-toggle-master"
   AWS_SQS_ENDPOINT: "https://sqs.us-east-1.amazonaws.com"
   AWS_REGION: "us-east-1"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4318"
 secrets:
   SERVICE_API_KEY: dG1fa2V5XzkyZDMyMjNiM2JkYzk2MTZhNTA0ZWEyZTMwZTMwZjY2Yzk0OTgxZWRlMWY5NmUxZTZkYzIxNGQ0NTM1YWU0MDY=
   AWS_ACCESS_KEY_ID: QVNJQVlXVlRWR0dMQTNHQ05CQ0k=

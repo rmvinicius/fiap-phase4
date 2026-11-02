@@ -16,6 +16,7 @@ image:
   pullPolicy: IfNotPresent
 configmap:
   PORT: "8001"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4318"
 secrets:
   DATABASE_URL: cG9zdGdyZXM6Ly9hdXRoX3NlcnZpY2U6YXV0aF9zZXJ2aWNlQDIwMjZAcmRzLWRldi0wMS5jbDh5eGVmeTR3eHoudXMtZWFzdC0xLnJkcy5hbWF6b25hd3MuY29tOjU0MzIvYXV0aF9kYg==
   MASTER_KEY: YWRtaW4ta2V5QDIwMjY=
