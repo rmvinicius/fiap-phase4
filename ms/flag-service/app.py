@@ -17,7 +17,46 @@ log = logging.getLogger(__name__)
 # Carrega .env para desenvolvimento local
 load_dotenv() 
 
+OTEL_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or os.getenv("OTEL_ENDPOINT")
+
+# --- OpenTelemetry ---
+_otel_enabled = False
+if OTEL_ENDPOINT:
+    try:
+        from opentelemetry import metrics, trace
+        from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+            OTLPMetricExporter,
+        )
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+            OTLPSpanExporter,
+        )
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+        _resource = Resource.create({"service.name": "flag-service"})
+        _tracer_provider = TracerProvider(resource=_resource)
+        _tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{OTEL_ENDPOINT.rstrip('/') }/v1/traces")))
+        trace.set_tracer_provider(_tracer_provider)
+
+        _metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint=f"{OTEL_ENDPOINT.rstrip('/') }/v1/metrics"))
+        _meter_provider = MeterProvider(resource=_resource, metric_readers=[_metric_reader])
+        metrics.set_meter_provider(_meter_provider)
+        _otel_enabled = True
+        log.info(f"OpenTelemetry habilitado, exportando para {OTEL_ENDPOINT}")
+    except Exception as e:  # noqa: BLE001
+        log.warning(f"Falha ao inicializar OpenTelemetry: {e}")
+
 app = Flask(__name__)
+
+if _otel_enabled:
+    try:
+        from opentelemetry.instrumentation.flask import FlaskInstrumentor
+        FlaskInstrumentor().instrument_app(app)
+    except Exception as e:  # noqa: BLE001
+        log.warning(f"Falha ao instrumentar Flask: {e}")
 
 # --- Configuração ---
 DATABASE_URL = os.getenv("DATABASE_URL")
