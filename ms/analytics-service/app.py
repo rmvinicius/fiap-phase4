@@ -24,6 +24,7 @@ SQS_QUEUE_URL = os.getenv("AWS_SQS_URL")
 SQS_ENDPOINT = os.getenv("AWS_SQS_ENDPOINT")
 DYNAMODB_TABLE_NAME = os.getenv("AWS_DYNAMODB_TABLE")
 DYNAMODB_ENDPOINT = os.getenv("AWS_DYNAMODB_ENDPOINT")
+OTEL_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or os.getenv("OTEL_ENDPOINT")
 
 if not all([AWS_REGION, SQS_QUEUE_URL, DYNAMODB_TABLE_NAME]):
     log.critical("Erro: AWS_REGION, AWS_SQS_URL, e AWS_DYNAMODB_TABLE devem ser definidos.")
@@ -120,9 +121,42 @@ def sqs_worker_loop():
             log.error(f"Erro inesperado no loop principal do SQS: {e}")
             time.sleep(10)
 
+# --- OpenTelemetry ---
+_otel_enabled = False
+if OTEL_ENDPOINT:
+    try:
+        from opentelemetry import trace, metrics
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+        from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+
+        _resource = Resource.create({"service.name": "analytics-service"})
+        _tracer_provider = TracerProvider(resource=_resource)
+        _tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{OTEL_ENDPOINT.rstrip('/')}/v1/traces")))
+        trace.set_tracer_provider(_tracer_provider)
+
+        _metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint=f"{OTEL_ENDPOINT.rstrip('/')}/v1/metrics"))
+        _meter_provider = MeterProvider(resource=_resource, metric_readers=[_metric_reader])
+        metrics.set_meter_provider(_meter_provider)
+        _otel_enabled = True
+        log.info(f"OpenTelemetry habilitado, exportando para {OTEL_ENDPOINT}")
+    except Exception as e:
+        log.warning(f"Falha ao inicializar OpenTelemetry: {e}")
+
 # --- Servidor Flask (Apenas para Health Check) ---
 
 app = Flask(__name__)
+
+if _otel_enabled:
+    try:
+        from opentelemetry.instrumentation.flask import FlaskInstrumentor
+        FlaskInstrumentor().instrument_app(app)
+    except Exception as e:
+        log.warning(f"Falha ao instrumentar Flask: {e}")
 
 @app.route('/health')
 def health():

@@ -21,6 +21,7 @@ configmap:
   AWS_DYNAMODB_TABLE: "ToggleMasterAnalytics"
   AWS_DYNAMODB_ENDPOINT: "https://dynamodb.us-east-1.amazonaws.com"
   AWS_REGION: "us-east-1"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4318"
 secrets:
   AWS_ACCESS_KEY_ID: QVNJQVlXVlRWR0dMQTNHQ05CQ0k=
   AWS_SECRET_ACCESS_KEY: QU5zSCt4Z3cxOXpKRmk1bnVrS0lFSGZYWWdrdlpWYTJaVHdIMlNVdg==
