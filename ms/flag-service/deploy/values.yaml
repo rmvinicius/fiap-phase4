@@ -17,6 +17,7 @@ image:
 configmap:
   AUTH_SERVICE_URL: "http://auth-service-svc.application.svc.cluster.local:8001"
   PORT: "8002"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4318"
 secrets:
   DATABASE_URL: cG9zdGdyZXM6Ly9mbGFnX3NlcnZpY2U6ZmxhZ19zZXJ2aWNlMjAyNkByZHMtZGV2LTAyLmNsOHl4ZWZ5NHd4ei51cy1lYXN0LTEucmRzLmFtYXpvbmF3cy5jb206NTQzMi9mbGFnc19kYg==
 probes:
