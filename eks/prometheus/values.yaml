@@ -1,0 +1,25 @@
+# Values para prometheus-community/prometheus.
+# Prometheus standalone: o Grafana existente consome esta instancia via ClusterIP.
+
+alertmanager:
+  enabled: false
+
+kube-state-metrics:
+  enabled: true
+
+prometheus-node-exporter:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false
+
+server:
+  enabled: true
+  replicaCount: 1
+  retention: 15d
+  persistentVolume:
+    enabled: true
+    size: 8Gi
+  service:
+    type: ClusterIP
+    servicePort: 80

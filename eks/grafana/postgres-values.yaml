@@ -1,0 +1,16 @@
+# Temporary in-cluster PostgreSQL for Grafana. Replace with AWS RDS settings
+# when the managed database is ready.
+auth:
+  username: grafana
+  database: grafana
+  existingSecret: grafana-secrets
+  secretKeys:
+    adminPasswordKey: postgres-password-admin
+    userPasswordKey: postgres-password
+
+primary:
+  persistence:
+    enabled: true
+    size: 8Gi
+
+architecture: standalone

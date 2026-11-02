@@ -1,0 +1,45 @@
+# Minimal values for the Grafana Helm chart.
+replicas: 1
+automountServiceAccountToken: false
+
+testFramework:
+  enabled: false
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: false # Managed by eks/ingress-nginx/grafana-ingress.yaml
+
+persistence:
+  enabled: false # Grafana state is stored in PostgreSQL.
+
+admin:
+  existingSecret: grafana-secrets
+  userKey: admin-user
+  passwordKey: admin-password
+
+envValueFrom:
+  GF_DATABASE_USER:
+    secretKeyRef:
+      name: grafana-secrets
+      key: postgres-user
+  GF_DATABASE_PASSWORD:
+    secretKeyRef:
+      name: grafana-secrets
+      key: postgres-password
+
+grafana.ini:
+  server:
+    domain: grafana.inforhost.com
+    root_url: "%(protocol)s://%(domain)s/"
+  database:
+    type: postgres
+    host: postgresql.grafana.svc.cluster.local:5432
+    name: grafana
+    user: "$__env{GF_DATABASE_USER}"
+    password: "$__env{GF_DATABASE_PASSWORD}"
+    ssl_mode: disable
