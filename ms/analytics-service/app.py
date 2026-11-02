@@ -125,14 +125,18 @@ def sqs_worker_loop():
 _otel_enabled = False
 if OTEL_ENDPOINT:
     try:
-        from opentelemetry import trace, metrics
+        from opentelemetry import metrics, trace
+        from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+            OTLPMetricExporter,
+        )
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+            OTLPSpanExporter,
+        )
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
         from opentelemetry.sdk.resources import Resource
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-        from opentelemetry.sdk.metrics import MeterProvider
-        from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-        from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 
         _resource = Resource.create({"service.name": "analytics-service"})
         _tracer_provider = TracerProvider(resource=_resource)
@@ -144,7 +148,7 @@ if OTEL_ENDPOINT:
         metrics.set_meter_provider(_meter_provider)
         _otel_enabled = True
         log.info(f"OpenTelemetry habilitado, exportando para {OTEL_ENDPOINT}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         log.warning(f"Falha ao inicializar OpenTelemetry: {e}")
 
 # --- Servidor Flask (Apenas para Health Check) ---
@@ -155,7 +159,7 @@ if _otel_enabled:
     try:
         from opentelemetry.instrumentation.flask import FlaskInstrumentor
         FlaskInstrumentor().instrument_app(app)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         log.warning(f"Falha ao instrumentar Flask: {e}")
 
 @app.route('/health')
