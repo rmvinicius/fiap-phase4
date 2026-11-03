@@ -18,3 +18,38 @@
 * Criar uma conta no PagerDuty para abrir incidente automaticamente
 * Notificar no slack ou discord
 * Criar uma automação no githubaction ou aws lambda via webhook reiniciando o serviço após incidente
+
+# Execuções
+
+* Ajustado no terraform a labrole para o EKS
+* Adicionado as senhas do banco nas secrets do github actions
+* Adicionado as credenciais de autenticação na aws no github actions
+* Criado a branch develop
+
+* Provisionado o terraform
+* Acessado a maquina EC2 e instalado o runner self-hosted
+* Instalado o psql 17 client https://dev.to/johndotowl/postgresql-17-installation-on-ubuntu-2404-5bfi
+
+* Criado o usuário para a base auth_db
+    CREATE USER auth_service WITH PASSWORD '<senha>';
+    GRANT ALL PRIVILEGES ON DATABASE auth_db TO auth_service;
+    ALTER DATABASE auth_db OWNER TO auth_service;
+    ALTER SCHEMA public OWNER TO auth_service;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO auth_service;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO auth_service;
+
+* Executar script da base
+    psql "host=$RDSHOST01 port=5432 dbname=auth_db user=auth_service" -f init.sql
+    psql "host=$RDSHOST02 port=5432 dbname=flags_db user=flag_service" -f init.sql
+    psql "host=$RDSHOST03 port=5432 dbname=targeting_db user=targeting_service" -f init.sql
+
+* Instalar kubectl https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+
+* Instalar awscli
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+
+* Copiar as credenciais aws -> ~/.aws/credentials
+
+* Conectar no cluster: aws eks update-kubeconfig --region <region-code> --name <cluster-name>

@@ -140,6 +140,7 @@ eks_node_groups = [
   }
 ]
 eks_role_arn      = "arn:aws:iam::218443855829:role/LabRole"
+eks_principal_arn = "arn:aws:iam::218443855829:role/voclabs"
 eks_capacity_type = "SPOT"
 
 ### DYNAMODB

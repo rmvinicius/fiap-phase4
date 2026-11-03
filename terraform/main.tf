@@ -92,6 +92,7 @@ module "eks" {
   eks_subnet_ids         = module.network.eks_subnet_ids
   eks_node_groups        = var.eks_node_groups
   eks_role_arn           = var.eks_role_arn
+  eks_principal_arn      = var.eks_principal_arn
   eks_security_group_ids = [module.network.sg_private_id]
   eks_capacity_type      = var.eks_capacity_type
 }

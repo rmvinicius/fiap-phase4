@@ -28,6 +28,10 @@ variable "eks_role_arn" {
   type = string
 }
 
+variable "eks_principal_arn" {
+  type = string
+}
+
 variable "eks_security_group_ids" {
   type = list(string)
 }

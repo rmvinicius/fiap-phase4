@@ -254,6 +254,10 @@ variable "eks_role_arn" {
   type = string
 }
 
+variable "eks_principal_arn" {
+  type = string
+}
+
 variable "eks_capacity_type" {
   type = string
 }

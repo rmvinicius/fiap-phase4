@@ -50,7 +50,7 @@ resource "aws_eks_node_group" "nodes" {
 
 resource "aws_eks_access_entry" "voclabs" {
   cluster_name  = aws_eks_cluster.main.name
-  principal_arn = "arn:aws:iam::218443855829:role/voclabs"
+  principal_arn = var.eks_principal_arn
   type          = "STANDARD"
 }
 
