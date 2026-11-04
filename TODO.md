@@ -79,6 +79,13 @@
         Click Connect
     * Executar a pipeline Deploy Gitops
 
+* Configurar os serviços:
+    * Atualizar no values.yaml de cada serviço
+        * Url do ECR
+        * Credenciais AWS
+        * Url do SQS
+        * Conexão com banco
+
 Proximos passos:
 
 * Subir nginx, keda...

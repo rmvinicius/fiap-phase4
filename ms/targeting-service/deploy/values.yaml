@@ -10,7 +10,7 @@ resources:
     cpu: "100m"
     memory: "256Mi"
 image:
-  repository: 598450975126.dkr.ecr.us-east-1.amazonaws.com
+  repository: 218443855829.dkr.ecr.us-east-1.amazonaws.com
   name: targeting-service
   tag: "v1.0.0-26992541b9fb6a48040a8e06ae344ac16af5de6f-DEV"
   pullPolicy: IfNotPresent
@@ -19,7 +19,7 @@ configmap:
   PORT: "8003"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4318"
 secrets:
-  DATABASE_URL: cG9zdGdyZXM6Ly90YXJnZXRpbmdfc2VydmljZTp0YXJnZXRpbmdfc2VydmljZTIwMjZAcmRzLWRldi0wMy5jbDh5eGVmeTR3eHoudXMtZWFzdC0xLnJkcy5hbWF6b25hd3MuY29tOjU0MzIvdGFyZ2V0aW5nX2Ri
+  DATABASE_URL: cG9zdGdyZXM6Ly90YXJnZXRpbmdfc2VydmljZTp0YXJnZXRpbmdfc2VydmljZTIwMjZAcmRzLWRldi0wMy5jZ3QyMHMyb3lzajAudXMtZWFzdC0xLnJkcy5hbWF6b25hd3MuY29tOjU0MzIvdGFyZ2V0aW5nX2Ri
 probes:
   startup:
     path: /health
