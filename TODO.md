@@ -53,3 +53,36 @@
 * Copiar as credenciais aws -> ~/.aws/credentials
 
 * Conectar no cluster: aws eks update-kubeconfig --region <region-code> --name <cluster-name>
+
+* Executar as pipelines:
+    * Micro service / ALL
+    * Helm CI/CD
+    * Install Keda
+    * Install Ingress Nginx
+    * Install Argo CD
+
+* Configurar ARGO CD
+    * Acessar o argo cd pela url do load balancer/
+        * A senha esta disponível: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+    * Configurar o repositório:
+        argocd repo add https://github.com/rmvinicius/fiap-phase3.git \
+        --username <your-github-username> \
+        --password <your-github-token> \
+        --upsert
+
+        Method 2: Via ArgoCD UI
+        Settings → Repositories → Connect Repo
+        Type: Git
+        Repository URL: https://github.com/rmvinicius/fiap-phase3.git
+        Username: Your GitHub username
+        Password: Personal Access Token (PAT) with repo scope
+        Click Connect
+    * Executar a pipeline Deploy Gitops
+
+Proximos passos:
+
+* Subir nginx, keda...
+* Configurar o argo cd
+* Subir as bases
+* Subir os serviços
+* Validar as chamadas
