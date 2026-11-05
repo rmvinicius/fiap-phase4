@@ -88,8 +88,4 @@
 
 Proximos passos:
 
-* Subir nginx, keda...
-* Configurar o argo cd
-* Subir as bases
-* Subir os serviços
 * Validar as chamadas
