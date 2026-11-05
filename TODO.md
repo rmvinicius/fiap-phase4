@@ -86,6 +86,8 @@
         * Url do SQS
         * Conexão com banco
 
-Proximos passos:
+* Sempres que iniciar o LAB:
+    * Atualizar AWS Credentials nos microserviços
+    * Atualizar as credenciais no github
 
 * Validar as chamadas
