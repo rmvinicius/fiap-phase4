@@ -18,7 +18,7 @@ configmap:
   PORT: "8004"
   FLAG_SERVICE_URL: "http://flag-service-svc.application.svc.cluster.local:8002"
   TARGETING_SERVICE_URL: "http://targeting-service-svc.application.svc.cluster.local:8003"
-  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/598450975126/queue-toggle-master"
+  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/218443855829/queue-toggle-master"
   AWS_SQS_ENDPOINT: "https://sqs.us-east-1.amazonaws.com"
   AWS_REGION: "us-east-1"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4318"
