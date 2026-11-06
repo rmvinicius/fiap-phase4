@@ -70,3 +70,18 @@ resource "aws_eks_addon" "ebs_csi" {
   addon_version               = "v1.67.2-eksbuild.1"
   resolve_conflicts_on_update = "PRESERVE"
 }
+
+data "aws_eks_cluster" "this" {
+  name = aws_eks_cluster.main.name
+}
+
+resource "aws_iam_open_id_connect_provider" "this" {
+  url = data.aws_eks_cluster.this.identity_oidc_config[0].issuer
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  tags = {
+    Name        = "${var.eks_cluster_name}-oidc"
+    Environment = var.environment
+  }
+}
