@@ -170,6 +170,51 @@ jobs:
         run: |
           helm upgrade --install prometheus --version 29.44.0 prometheus-community/prometheus --namespace ${{ env.NAMESPACE }} --create-namespace --values values.yaml
 
+  install-loki:
+    name: "📦 Install loki"
+    needs: changes
+    runs-on: [self-hosted, eks, private]
+    env:
+      AWS_REGION: "us-east-1"
+      NAMESPACE: "monitoring"
+    if: |
+      needs.changes.outputs.loki == 'true'
+      || (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'loki'))
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+
+      - name: 🔧 Configure AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', needs.changes.outputs.environment)] }}
+          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', needs.changes.outputs.environment)] }}
+          aws-session-token: ${{ secrets[format('AWS_SESSION_TOKEN_{0}', needs.changes.outputs.environment)] }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔧 Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: 🔧 Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets[format('EKS_CLUSTER_NAME_{0}', needs.changes.outputs.environment)] }}
+
+      - name: 🔍 Verify Connection & Deploy
+        run: |
+          kubectl get nodes
+
+      - name: 🔍 Add Loki Helm repo
+        run: |
+          helm repo add grafana-community https://grafana-community.github.io/helm-charts
+          helm repo update grafana-community
+
+      - name: 📦 Install Loki
+        working-directory: eks/loki
+        run: |
+          helm upgrade --install loki --version 21.0.0 grafana-community/loki --namespace ${{ env.NAMESPACE }} --create-namespace --values values.yaml
+
   install-alloy:
     name: "📦 Install alloy"
     needs: changes
@@ -213,49 +258,4 @@ jobs:
       - name: 📦 Install Alloy
         working-directory: eks/alloy
         run: |
-          helm upgrade --install alloy  --version 1.13.1 grafana/alloy --namespace ${{ env.NAMESPACE }} --create-namespace --values values.yaml
-
-  install-loki:
-    name: "📦 Install loki"
-    needs: changes
-    runs-on: [self-hosted, eks, private]
-    env:
-      AWS_REGION: "us-east-1"
-      NAMESPACE: "monitoring"
-    if: |
-      needs.changes.outputs.loki == 'true'
-      || (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'loki'))
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v7
-
-      - name: 🔧 Configure AWS
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', needs.changes.outputs.environment)] }}
-          aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', needs.changes.outputs.environment)] }}
-          aws-session-token: ${{ secrets[format('AWS_SESSION_TOKEN_{0}', needs.changes.outputs.environment)] }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: 🔧 Setup Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: v3.14.4
-
-      - name: 🔧 Configure kubectl for EKS
-        run: |
-          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets[format('EKS_CLUSTER_NAME_{0}', needs.changes.outputs.environment)] }}
-
-      - name: 🔍 Verify Connection & Deploy
-        run: |
-          kubectl get nodes
-
-      - name: 🔍 Add Loki Helm repo
-        run: |
-          helm repo add grafana-community https://grafana-community.github.io/helm-charts
-          helm repo update grafana
-
-      - name: 📦 Install Loki
-        working-directory: eks/loki
-        run: |
-          helm upgrade --install loki --version 18.16.0 grafana-community/loki --namespace ${{ env.NAMESPACE }} --create-namespace --values values.yaml
+          helm upgrade --install alloy  --version 1.15.0 grafana/alloy --namespace ${{ env.NAMESPACE }} --create-namespace --values values.yaml

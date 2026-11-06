@@ -25,9 +25,9 @@ loki:
       rules_directory: /var/loki/rules
   limits_config:
     allow_structured_metadata: true
-    retention_period: 168h
+    retention_period: 48h
     reject_old_samples: true
-    reject_old_samples_max_age: 168h
+    reject_old_samples_max_age: 48h
   compactor:
     working_directory: /var/loki/compactor
     retention_enabled: true
@@ -38,8 +38,8 @@ singleBinary:
   replicas: 1
   persistence:
     enabled: true
-    size: 20Gi
-    storageClass: null
+    size: 10Gi
+    storageClass: "local"
     enableStatefulSetAutoDeletePVC: false
   resources:
     requests:
@@ -48,14 +48,6 @@ singleBinary:
     limits:
       cpu: "1"
       memory: 2Gi
-
-# Monolithic mode does not run the distributed read/write/backend workloads.
-read:
-  replicas: 0
-write:
-  replicas: 0
-backend:
-  replicas: 0
 
 gateway:
   enabled: true
@@ -67,16 +59,32 @@ gateway:
   resources:
     requests:
       cpu: 50m
-      memory: 64Mi
+      memory: 128Mi
     limits:
-      cpu: 250m
+      cpu: 100m
       memory: 256Mi
 
-# Keep resource use reasonable for a local Docker Desktop cluster.
+read:
+  enabled: false
+write:
+  enabled: false
+backend:
+  enabled: false
+
 chunksCache:
   enabled: false
+
 resultsCache:
   enabled: false
 
 lokiCanary:
-  enabled: true
+  enabled: false
+
+memcachedExporter:
+  enabled: false
+
+ruler:
+  enabled: false
+
+test:
+  enabled: false

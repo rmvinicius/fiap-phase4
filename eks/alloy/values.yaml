@@ -11,10 +11,10 @@ serviceAccount:
   create: true
   automountServiceAccountToken: true
 
+configReloader:
+  enabled: false
+
 alloy:
-  mounts:
-    varlog: false
-    dockercontainers: false
   resources:
     requests:
       cpu: 100m
@@ -22,6 +22,11 @@ alloy:
     limits:
       cpu: 500m
       memory: 512Mi
+  #extraPorts:
+  #  - name: "oltp-http"
+  #    port: 4318
+  #    targetPort: 4318
+  #    protocol: "TCP"
   configMap:
     create: true
     content: |-
@@ -64,11 +69,41 @@ alloy:
         forward_to = [loki.write.local.receiver]
       }
 
-      loki.write "local" {
+      loki.write "default" {
         endpoint {
-          url = "http://loki-gateway.loki.svc.cluster.local/loki/api/v1/push"
-          headers = {
-            "X-Scope-OrgID" = "fiap",
-          }
+          url = "http://loki.monitoring.svc.cluster.local/loki/api/v1/push"
         }
       }
+
+      logging {
+        level  = "warn"
+        format = "logfmt"
+      }
+      
+      #otelcol.exporter.otlphttp "default" {
+      #  client {
+      #    endpoint = "https://grafana-melt-tempo-non-prod.cresol.tec.br"
+      #    // Disable TLS for OTLP remote write. https://grafana.com/docs/tempo/latest/setup/set-up-test-app/
+      #    tls {
+      #        // The connection is insecure.
+      #        insecure = true
+      #        // Do not verify TLS certificates when connecting.
+      #        insecure_skip_verify = true
+      #    }
+      #  }
+      #}
+      #otelcol.receiver.otlp "default" {
+      #  http {
+      #    endpoint = "0.0.0.0:4318"
+      #  }
+      #  output {
+      #    metrics = [otelcol.exporter.otlphttp.default.input]
+      #    traces  = [otelcol.connector.servicegraph.default.input, otelcol.exporter.otlphttp.default.input]
+      #  }
+      #}
+      #otelcol.connector.servicegraph "default" {
+      #  dimensions = ["http.method", "http.target"]
+      #  output {
+      #    metrics = [otelcol.exporter.otlphttp.default.input]
+      #  }
+      #}
