@@ -63,3 +63,10 @@ resource "aws_eks_access_policy_association" "voclabs_admin" {
     type = "cluster"
   }
 }
+
+resource "aws_eks_addon" "ebs_csi" {
+  cluster_name                = aws_eks_cluster.main.name
+  addon_name                  = "aws-ebs-csi-driver"
+  addon_version               = "v1.67.2-eksbuild.1"
+  resolve_conflicts_on_update = "PRESERVE"
+}
