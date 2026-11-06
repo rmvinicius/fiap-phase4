@@ -103,6 +103,7 @@ jobs:
           TF_VAR_rds_password_auth_db: ${{ secrets[format('RDS_PASSWORD_AUTH_DB_{0}', steps.resolve.outputs.ENV)] }}
           TF_VAR_rds_password_flags_db: ${{ secrets[format('RDS_PASSWORD_FLAGS_DB_{0}', steps.resolve.outputs.ENV)] }}
           TF_VAR_rds_password_targeting_db: ${{ secrets[format('RDS_PASSWORD_TARGETING_DB_{0}', steps.resolve.outputs.ENV)] }}
+          TF_VAR_rds_password_grafana_db: ${{ secrets[format('RDS_PASSWORD_GRAFANA_DB_{0}', steps.resolve.outputs.ENV)] }}
         run: terraform plan -var-file="environment/${{ steps.resolve.outputs.ENV_LOWER }}.tfvars" -out=tfplan
 
       - name: 📤 Upload tfplan artifact

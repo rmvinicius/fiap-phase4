@@ -46,6 +46,7 @@ jobs:
           TF_VAR_rds_password_auth_db: ${{ secrets[format('RDS_PASSWORD_AUTH_DB_{0}', inputs.environment)] }}
           TF_VAR_rds_password_flags_db: ${{ secrets[format('RDS_PASSWORD_FLAGS_DB_{0}', inputs.environment)] }}
           TF_VAR_rds_password_targeting_db: ${{ secrets[format('RDS_PASSWORD_TARGETING_DB_{0}', inputs.environment)] }}
+          TF_VAR_rds_password_grafana_db: ${{ secrets[format('RDS_PASSWORD_GRAFANA_DB_{0}', inputs.environment)] }}
         run: terraform plan -destroy -var-file="environment/${{ steps.env-lower.outputs.LOWER }}.tfvars" -no-color -out=tfplan-destroy
 
       - name: ⚙️ Apply destroy
@@ -54,4 +55,5 @@ jobs:
           TF_VAR_rds_password_auth_db: ${{ secrets[format('RDS_PASSWORD_AUTH_DB_{0}', inputs.environment)] }}
           TF_VAR_rds_password_flags_db: ${{ secrets[format('RDS_PASSWORD_FLAGS_DB_{0}', inputs.environment)] }}
           TF_VAR_rds_password_targeting_db: ${{ secrets[format('RDS_PASSWORD_TARGETING_DB_{0}', inputs.environment)] }}
+          TF_VAR_rds_password_grafana_db: ${{ secrets[format('RDS_PASSWORD_GRAFANA_DB_{0}', inputs.environment)] }}
         run: terraform apply -auto-approve tfplan-destroy
