@@ -64,24 +64,49 @@ resource "aws_eks_access_policy_association" "voclabs_admin" {
   }
 }
 
+# OIDC provider required for IRSA. Without it the EBS CSI add-on
+# cannot create its default service-account role.
+data "aws_eks_cluster" "this" {
+  name = aws_eks_cluster.main.name
+}
+
+resource "aws_iam_openid_connect_provider" "this" {
+  url           = data.aws_eks_cluster.this.identity_oidc_config[0].issuer
+  client_id_list = ["sts.amazonaws.com"]
+  tags = {
+    Name        = "${var.eks_cluster_name}-oidc"
+    Environment = var.environment
+  }
+}
+
+# IRSA role assumed by the CSI controller service account.
+resource "aws_iam_role" "ebs_csi" {
+  name = "${var.eks_cluster_name}-ebs-csi"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = aws_iam_openid_connect_provider.this.arn
+      }
+      Action = "sts:AssumeRole"
+      Condition = {
+        StringEquals = "${aws_iam_openid_connect_provider.this.url}:sub"
+          = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi" {
+  role       = aws_iam_role.ebs_csi.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEKS_EBS_CSI_DriverPolicy"
+}
+
 resource "aws_eks_addon" "ebs_csi" {
   cluster_name                = aws_eks_cluster.main.name
   addon_name                  = "aws-ebs-csi-driver"
   addon_version               = "v1.67.2-eksbuild.1"
   resolve_conflicts_on_update = "PRESERVE"
-}
-
-data "aws_eks_cluster" "this" {
-  name = aws_eks_cluster.main.name
-}
-
-resource "aws_iam_open_id_connect_provider" "this" {
-  url = data.aws_eks_cluster.this.identity_oidc_config[0].issuer
-
-  client_id_list = ["sts.amazonaws.com"]
-
-  tags = {
-    Name        = "${var.eks_cluster_name}-oidc"
-    Environment = var.environment
-  }
+  service_account_role_arn    = aws_iam_role.ebs_csi.arn
 }
