@@ -1,25 +1,34 @@
-# Values para prometheus-community/prometheus.
-# Prometheus standalone: o Grafana existente consome esta instancia via ClusterIP.
-
 alertmanager:
-  enabled: false
+  enabled: true
 
 kube-state-metrics:
   enabled: true
 
 prometheus-node-exporter:
-  enabled: false
+  enabled: true
 
 prometheus-pushgateway:
   enabled: false
 
 server:
   enabled: true
+  global:
+    scrape_interval: 1m
+    scrape_timeout: 10s
+    evaluation_interval: 1m
   replicaCount: 1
-  retention: 15d
+  retention: 7d
   persistentVolume:
     enabled: true
     size: 8Gi
+    storageClassName: "local"
   service:
     type: ClusterIP
     servicePort: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
