@@ -91,8 +91,7 @@ resource "aws_iam_role" "ebs_csi" {
       }
       Action = "sts:AssumeRole"
       Condition = {
-        StringEquals = "${aws_iam_openid_connect_provider.this.url}:sub"
-          = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+        "${aws_iam_openid_connect_provider.this.url}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
       }
     }]
   })
