@@ -141,7 +141,7 @@ eks_node_groups = [
     name          = "eks-nodepool-dev-01"
     instance_type = "t3.small"
     desired_size  = 2
-    min_size      = 1
+    min_size      = 0
     max_size      = 4
   }
 ]
