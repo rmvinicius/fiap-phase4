@@ -24,7 +24,7 @@ ingress:
 
 # Persist dashboards/users across pod restarts. Requires a storage class on EKS.
 persistence:
-  enabled: true
+  enabled: false
   type: pvc
   accessModes:
     - ReadWriteOnce
