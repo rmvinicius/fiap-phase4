@@ -116,6 +116,12 @@ rds_database_instances = [
     db_name  = "targeting_db"
     username = "postgres"
     password = ""
+  },
+  {
+    name     = "rds-dev-04"
+    db_name  = "grafana_db"
+    username = "postgres"
+    password = ""
   }
 ]
 rds_allocated_storage    = 20

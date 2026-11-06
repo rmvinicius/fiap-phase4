@@ -57,6 +57,7 @@ locals {
     "auth_db"      = var.rds_password_auth_db
     "flags_db"     = var.rds_password_flags_db
     "targeting_db" = var.rds_password_targeting_db
+    "grafana_db"   = var.rds_password_grafana_db
   }
 
   rds_instances = [for db in var.rds_database_instances : {

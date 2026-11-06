@@ -1,5 +1,13 @@
-# Minimal values for the Grafana Helm chart.
 replicas: 1
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
 automountServiceAccountToken: false
 
 testFramework:
@@ -12,15 +20,34 @@ service:
   targetPort: 3000
 
 ingress:
-  enabled: false # Managed by eks/ingress-nginx/grafana-ingress.yaml
+  enabled: false
 
+# Persist dashboards/users across pod restarts. Requires a storage class on EKS.
 persistence:
-  enabled: false # Grafana state is stored in PostgreSQL.
+  enabled: true
+  type: pvc
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  finalizers:
+    - kubernetes.io/pvc-protection
 
 admin:
   existingSecret: grafana-secrets
   userKey: admin-user
   passwordKey: admin-password
+
+grafana.ini:
+  server:
+    domain: grafana.inforhost.com
+    root_url: "%(protocol)s://%(domain)s/"
+  database:
+    type: postgres
+    host: rds-dev-04.cgt20s2oysj0.us-east-1.rds.amazonaws.com:5432
+    name: grafana_db
+    user: "$__env{GF_DATABASE_USER}"
+    password: "$__env{GF_DATABASE_PASSWORD}"
+    ssl_mode: enabled
 
 envValueFrom:
   GF_DATABASE_USER:
@@ -31,15 +58,3 @@ envValueFrom:
     secretKeyRef:
       name: grafana-secrets
       key: postgres-password
-
-grafana.ini:
-  server:
-    domain: grafana.inforhost.com
-    root_url: "%(protocol)s://%(domain)s/"
-  database:
-    type: postgres
-    host: postgresql.grafana.svc.cluster.local:5432
-    name: grafana
-    user: "$__env{GF_DATABASE_USER}"
-    password: "$__env{GF_DATABASE_PASSWORD}"
-    ssl_mode: disable

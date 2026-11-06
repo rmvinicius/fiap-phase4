@@ -199,6 +199,12 @@ variable "rds_password_targeting_db" {
   description = "Master password for the targeting_db RDS instance (set via TF_VAR_rds_password_targeting_db)."
 }
 
+variable "rds_password_grafana_db" {
+  type        = string
+  sensitive   = true
+  description = "Master password for the grafana_db RDS instance (set via TF_VAR_rds_password_grafana_db)."
+}
+
 variable "rds_allocated_storage" {
   type = number
 }
