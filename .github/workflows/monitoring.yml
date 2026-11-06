@@ -45,6 +45,7 @@ jobs:
       grafana: ${{ steps.filter.outputs.grafana }}
       loki: ${{ steps.filter.outputs.loki }}
       prometheus: ${{ steps.filter.outputs.prometheus }}
+      environment: ${{ steps.resolve.outputs.ENV }}
     steps:
       - name: 📥 Checkout (full history)
         uses: actions/checkout@v7

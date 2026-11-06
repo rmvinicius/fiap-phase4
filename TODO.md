@@ -91,3 +91,18 @@
     * Atualizar as credenciais no github
 
 * Validar as chamadas
+
+-----
+
+# Para o tech-challenge 4
+
+* Nova base para o grafana
+    * Adicionado uma nova base no terraform, rds-dev-04 com database grafana_db
+    * Configurar values.yaml do grafana-community helm chart
+    * Criado o usuário para a base grafana_db
+        CREATE USER grafana WITH PASSWORD '<senha>';
+        GRANT ALL PRIVILEGES ON DATABASE grafana_db TO grafana;
+        ALTER DATABASE grafana_db OWNER TO grafana;
+        ALTER SCHEMA public OWNER TO grafana;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO grafana;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO grafana;
