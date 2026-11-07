@@ -80,29 +80,22 @@ alloy:
         level  = "warn"
         format = "logfmt"
       }
-      otelcol.exporter.otlphttp "default" {
-        client {
-          endpoint = "http://tempo.monitoring.svc.cluster.local:4318"
-          // Disable TLS for OTLP remote write. https://grafana.com/docs/tempo/latest/setup/set-up-test-app/
-          tls {
-              // The connection is insecure.
-              insecure = true
-              // Do not verify TLS certificates when connecting.
-              insecure_skip_verify = true
-          }
-        }
-      }
+      
       otelcol.receiver.otlp "default" {
         http {
           endpoint = "0.0.0.0:4318"
         }
         output {
-          traces  = [otelcol.connector.servicegraph.default.input, otelcol.exporter.otlphttp.default.input]
+          traces = [otelcol.exporter.otlphttp.default.input]
         }
       }
-      otelcol.connector.servicegraph "default" {
-        dimensions = ["http.method", "http.target"]
-        output {
-          traces = [otelcol.exporter.otlphttp.default.input]
+
+      otelcol.exporter.otlphttp "default" {
+        client {
+          endpoint = "http://tempo.monitoring.svc.cluster.local:4318"
+          tls {
+            insecure = true
+            insecure_skip_verify = true
+          }
         }
       }

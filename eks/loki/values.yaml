@@ -28,7 +28,6 @@ loki:
     retention_period: 48h
     reject_old_samples: true
     reject_old_samples_max_age: 720h
-    max_line_age: 720h
   compactor:
     working_directory: /var/loki/compactor
     retention_enabled: true
