@@ -97,13 +97,12 @@ alloy:
           endpoint = "0.0.0.0:4318"
         }
         output {
-          metrics = [otelcol.exporter.otlphttp.default.input]
           traces  = [otelcol.connector.servicegraph.default.input, otelcol.exporter.otlphttp.default.input]
         }
       }
       otelcol.connector.servicegraph "default" {
         dimensions = ["http.method", "http.target"]
         output {
-          metrics = [otelcol.exporter.otlphttp.default.input]
+          traces = [otelcol.exporter.otlphttp.default.input]
         }
       }
