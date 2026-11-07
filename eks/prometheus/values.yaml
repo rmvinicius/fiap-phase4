@@ -20,7 +20,7 @@ server:
   persistentVolume:
     enabled: true
     size: 8Gi
-    storageClassName: "local"
+    storageClassName: "local-path"
   service:
     type: ClusterIP
     servicePort: 80
