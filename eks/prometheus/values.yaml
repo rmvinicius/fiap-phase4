@@ -4,7 +4,8 @@ alertmanager:
     enabled: true
     accessModes:
       - ReadWriteOnce
-    storageClass: "gp2"
+    storageClass: "local-path"
+    storageClassName: "local-path"
     size: 2Gi
 
 kube-state-metrics:
@@ -28,7 +29,7 @@ server:
     accessModes:
       - ReadWriteOnce
     size: 8Gi
-    storageClass: "gp2"
+    storageClass: "local-path"
   service:
     type: ClusterIP
     servicePort: 80
@@ -39,3 +40,5 @@ server:
     requests:
       cpu: 500m
       memory: 512Mi
+
+      
