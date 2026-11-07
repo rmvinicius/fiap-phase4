@@ -24,13 +24,12 @@ ingress:
 
 # Persist dashboards/users across pod restarts. Requires a storage class on EKS.
 persistence:
-  enabled: false
+  enabled: true
   type: pvc
   accessModes:
     - ReadWriteOnce
+  storageClassName: local-path
   size: 10Gi
-  finalizers:
-    - kubernetes.io/pvc-protection
 
 admin:
   existingSecret: grafana-secrets
