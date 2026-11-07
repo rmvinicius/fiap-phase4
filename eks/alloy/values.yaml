@@ -1,5 +1,34 @@
 # Coleta centralizada para cluster local e clusters pequenos.
 # Uma replica evita duplicar os logs quando Alloy usa a API do Kubernetes.
+
+#otelcol.exporter.otlphttp "default" {
+#  client {
+#    endpoint = "https://grafana-melt-tempo-non-prod.cresol.tec.br"
+#    // Disable TLS for OTLP remote write. https://grafana.com/docs/tempo/latest/setup/set-up-test-app/
+#    tls {
+#        // The connection is insecure.
+#        insecure = true
+#        // Do not verify TLS certificates when connecting.
+#        insecure_skip_verify = true
+#    }
+#  }
+#}
+#otelcol.receiver.otlp "default" {
+#  http {
+#    endpoint = "0.0.0.0:4318"
+#  }
+#  output {
+#    metrics = [otelcol.exporter.otlphttp.default.input]
+#    traces  = [otelcol.connector.servicegraph.default.input, otelcol.exporter.otlphttp.default.input]
+#  }
+#}
+#otelcol.connector.servicegraph "default" {
+#  dimensions = ["http.method", "http.target"]
+#  output {
+#    metrics = [otelcol.exporter.otlphttp.default.input]
+#  }
+#}
+
 controller:
   type: deployment
   replicas: 1
@@ -79,31 +108,3 @@ alloy:
         level  = "warn"
         format = "logfmt"
       }
-      
-      #otelcol.exporter.otlphttp "default" {
-      #  client {
-      #    endpoint = "https://grafana-melt-tempo-non-prod.cresol.tec.br"
-      #    // Disable TLS for OTLP remote write. https://grafana.com/docs/tempo/latest/setup/set-up-test-app/
-      #    tls {
-      #        // The connection is insecure.
-      #        insecure = true
-      #        // Do not verify TLS certificates when connecting.
-      #        insecure_skip_verify = true
-      #    }
-      #  }
-      #}
-      #otelcol.receiver.otlp "default" {
-      #  http {
-      #    endpoint = "0.0.0.0:4318"
-      #  }
-      #  output {
-      #    metrics = [otelcol.exporter.otlphttp.default.input]
-      #    traces  = [otelcol.connector.servicegraph.default.input, otelcol.exporter.otlphttp.default.input]
-      #  }
-      #}
-      #otelcol.connector.servicegraph "default" {
-      #  dimensions = ["http.method", "http.target"]
-      #  output {
-      #    metrics = [otelcol.exporter.otlphttp.default.input]
-      #  }
-      #}
