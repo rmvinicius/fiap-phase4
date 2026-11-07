@@ -5,12 +5,12 @@ on:
     branches: [ develop, staging, main ]
     paths:
       - 'eks/ingress-nginx/**'
-      - '.github/workflows/nginx-install.yml'
+      - '.github/workflows/ingress-nginx.yml'
   pull_request:
     branches: [ develop, staging, main ]
     paths:
       - 'eks/ingress-nginx/**'
-      - '.github/workflows/nginx-install.yml'
+      - '.github/workflows/ingress-nginx.yml'
   workflow_dispatch:
     inputs:
       environment:
