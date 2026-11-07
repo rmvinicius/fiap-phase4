@@ -66,10 +66,13 @@ gateway:
 
 read:
   enabled: false
+  replicas: 0
 write:
   enabled: false
+  replicas: 0
 backend:
   enabled: false
+  replicas: 0
 
 chunksCache:
   enabled: false
