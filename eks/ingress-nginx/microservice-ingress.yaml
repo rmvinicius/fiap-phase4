@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-nginx
-  namespace: ingress
+  namespace: application
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -16,34 +16,34 @@ spec:
           pathType: ImplementationSpecific
           backend:
             service:
-              name: auth-service-backend
+              name: auth-service-svc
               port:
                 number: 8001
         - path: /flags(/|$)(.*)
           pathType: ImplementationSpecific
           backend:
             service:
-              name: flag-service-backend
+              name: flag-service-svc
               port:
                 number: 8002
         - path: /targeting(/|$)(.*)
           pathType: ImplementationSpecific
           backend:
             service:
-              name: targeting-service-backend
+              name: targeting-service-svc
               port:
                 number: 8003
         - path: /evaluation(/|$)(.*)
           pathType: ImplementationSpecific
           backend:
             service:
-              name: evaluation-service-backend
+              name: evaluation-service-svc
               port:
                 number: 8004
         - path: /analytics(/|$)(.*)
           pathType: ImplementationSpecific
           backend:
             service:
-              name: analytics-service-backend
+              name: analytics-service-svc
               port:
                 number: 8005
