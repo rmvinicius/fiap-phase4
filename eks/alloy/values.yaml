@@ -95,12 +95,12 @@ alloy:
 
       loki.source.kubernetes "application_pods" {
         targets    = discovery.relabel.application_pods.output
-        forward_to = [loki.write.local.receiver]
+        forward_to = [loki.write.default.receiver]
       }
 
       loki.write "default" {
         endpoint {
-          url = "http://loki.monitoring.svc.cluster.local/loki/api/v1/push"
+          url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
         }
       }
 
