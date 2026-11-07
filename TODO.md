@@ -120,3 +120,5 @@
 
 * Adicionado o addon kube-state-metrics e metrics-server no cluster
 
+* Adicionado o grafana tempo
+
