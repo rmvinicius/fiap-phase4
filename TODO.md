@@ -96,6 +96,16 @@
 
 # Para o tech-challenge 4
 
+* Criar storageclass local pois via lab aws nao é possível usar o gp3 ou gp2
+    * Instalar o storageclass do rancher
+
+    kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml
+    kubect get pods -n local-path-storage
+
+    * Configurar nos recursos que tem pvc o seguinte storageClass:
+
+    storageClassName: local-path
+
 * Nova base para o grafana
     * Adicionado uma nova base no terraform, rds-dev-04 com database grafana_db
     * Configurar values.yaml do grafana-community helm chart
@@ -108,40 +118,5 @@
         ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO grafana;
 
 
-
-# A fazer
-
-* Tentar cria pvc local:
-
-    Option 2: Use a Local Path Provisioner (For Dynamic PVC Testing)If your lab assignment specifically requires you to use a PVC (persistence.enabled: true), you can bypass AWS EBS completely by installing the Rancher Local Path Provisioner. It provisions storage directly onto the local worker node's disk without needing any AWS IAM permissions.
-    
-    1.Install Local Path Provisioner:Kubernetes Cluster.Apply the open-source provisioner manifest to your cluster:
-    
-    kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml
-
-    Verification: Run kubectl get pods -n local-path-storage to ensure the provisioner pod is running.
-    
-    2.Set as Default Storage Class:Kubernetes Cluster.Make this local provisioner the default storage class for your cluster so PVCs bind to it automatically:
-    
-    kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-    
-    Verification: 
-    
-    Run kubectl get storageclass and check that local-path has (default) next to its name.
-    
-    3.Configure Storage Class in Helm:Grafana Helm Values.Update your Grafana values to explicitly request the local storage class:YAML
-    
-    persistence:
-        enabled: true
-        type: pvc
-        storageClassName: local-path
-        accessModes:
-            - ReadWriteOnce
-        size: 10Gi
-
-    Verification: 
-    
-    Run kubectl get pvc after installing the chart and confirm the PVC status changes from Pending to Bound.
-
-* Adicionar o addon kube-state-metrics no cluster
+* Adicionado o addon kube-state-metrics e metrics-server no cluster
 
