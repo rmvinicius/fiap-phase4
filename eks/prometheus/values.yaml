@@ -1,5 +1,11 @@
 alertmanager:
   enabled: true
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    storageClassName: "gp2"
+    size: 2Gi
 
 kube-state-metrics:
   enabled: true
@@ -19,8 +25,10 @@ server:
   retention: 7d
   persistentVolume:
     enabled: true
+    accessModes:
+      - ReadWriteOnce
     size: 8Gi
-    storageClassName: "local-path"
+    storageClassName: "gp2"
   service:
     type: ClusterIP
     servicePort: 80
@@ -31,3 +39,6 @@ server:
     requests:
       cpu: 500m
       memory: 512Mi
+
+
+    
