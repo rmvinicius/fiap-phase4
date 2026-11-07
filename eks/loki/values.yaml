@@ -5,7 +5,7 @@
 deploymentMode: Monolithic
 
 loki:
-  auth_enabled: true
+  auth_enabled: false
   commonConfig:
     path_prefix: /var/loki
     replication_factor: 1
