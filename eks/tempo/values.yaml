@@ -1,0 +1,24 @@
+replicas: 1
+
+tempo:
+  reportingEnabled: false
+  retention: 24h
+  memBallastSizeMbs: 64
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+persistence:
+  enabled: true
+  enableStatefulSetAutoDeletePVC: false
+  storageClassName: "local-path"
+  accessModes:
+    - ReadWriteOnce
+  size: 5Gi
+
+tempoQuery:
+  enabled: false
