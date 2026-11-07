@@ -40,7 +40,6 @@ grafana.ini:
   server:
     domain: grafana.inforhost.com
     root_url: "%(protocol)s://%(domain)s/grafana/"
-    root_subpath: "/grafana"
   database:
     type: postgres
     host: rds-dev-04.cgt20s2oysj0.us-east-1.rds.amazonaws.com:5432
