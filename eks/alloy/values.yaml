@@ -86,7 +86,18 @@ alloy:
           endpoint = "0.0.0.0:4318"
         }
         output {
-          traces = [otelcol.exporter.otlphttp.default.input]
+          traces  = [otelcol.exporter.otlphttp.default.input]
+          metrics = [otelcol.exporter.otlphttp.prometheus.input]
+        }
+      }
+
+      otelcol.exporter.otlphttp "prometheus" {
+        client {
+          endpoint = "http://prometheus-server.monitoring.svc.cluster.local/api/v1/otlp"
+          tls {
+            insecure = true
+            insecure_skip_verify = true
+          }
         }
       }
 
