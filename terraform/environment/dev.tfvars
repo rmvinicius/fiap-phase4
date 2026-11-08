@@ -139,8 +139,8 @@ eks_cluster_version = "1.36"
 eks_node_groups = [
   {
     name          = "eks-nodepool-dev-01"
-    instance_type = "t3.small"
-    desired_size  = 3
+    instance_type = "t3.large"
+    desired_size  = 2
     min_size      = 0
     max_size      = 4
   }
