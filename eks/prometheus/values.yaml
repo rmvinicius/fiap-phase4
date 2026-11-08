@@ -24,6 +24,24 @@ server:
     scrape_interval: 1m
     scrape_timeout: 10s
     evaluation_interval: 1m
+  replicaCount: 1
+  retention: 7d
+  persistentVolume:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    storageClass: "local-path"
+  service:
+    type: ClusterIP
+    servicePort: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
 
 extraScrapeConfigs: |
   - job_name: kubernetes-pods-annotations
@@ -57,23 +75,3 @@ extraScrapeConfigs: |
       - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
         action: replace
         target_label: app
-  replicaCount: 1
-  retention: 7d
-  persistentVolume:
-    enabled: true
-    accessModes:
-      - ReadWriteOnce
-    size: 8Gi
-    storageClass: "local-path"
-  service:
-    type: ClusterIP
-    servicePort: 80
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
-    requests:
-      cpu: 500m
-      memory: 512Mi
-
-      
