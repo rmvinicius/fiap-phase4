@@ -2,14 +2,15 @@
 
 ## Provisionar os recursos no cluster:
 
-* Prometheus
-* Loki
-* Grafana
-* Alloy
+* Prometheus | OK
+* Loki       | OK
+* Grafana    | OK
+* Alloy      | OK
+* Tempo      | OK
 
 # Etapa 2
 
-* Cconfigurar os microserviços com opentelemetry e expor no alloy
+* Configurar os microserviços com opentelemetry e expor no alloy        | OK
 * Configurar o datadog ou new relic em contas gratuitas for education
 
 # Etapa 3
@@ -17,7 +18,7 @@
 * No grafana ou APM, gerar alertas com taxas de erro 5xx maiores que 5%
 * Criar uma conta no PagerDuty para abrir incidente automaticamente
 * Notificar no slack ou discord
-* Criar uma automação no githubaction ou aws lambda via webhook reiniciando o serviço após incidente
+* Criar uma automação no github action ou aws lambda via webhook reiniciando o serviço após incidente
 
 # Execuções
 
@@ -30,7 +31,7 @@
 * Acessado a maquina EC2 e instalado o runner self-hosted
 * Instalado o psql 17 client https://dev.to/johndotowl/postgresql-17-installation-on-ubuntu-2404-5bfi
 
-* Criado o usuário para a base auth_db
+* Criado o usuário para cadaa base auth_db / flags_db / targeting_db / grafana_db
     CREATE USER auth_service WITH PASSWORD '<senha>';
     GRANT ALL PRIVILEGES ON DATABASE auth_db TO auth_service;
     ALTER DATABASE auth_db OWNER TO auth_service;
@@ -54,12 +55,21 @@
 
 * Conectar no cluster: aws eks update-kubeconfig --region <region-code> --name <cluster-name>
 
+* Criar storageclass local pois via lab aws nao é possível usar o gp3 ou gp2
+    * Instalar o storageclass do rancher
+        kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml
+        kubect get pods -n local-path-storage
+
+    * Configurar nos recursos que tem pvc o seguinte storageClass:
+        storageClassName: local-path
+
 * Executar as pipelines:
     * Micro service / ALL
     * Helm CI/CD
     * Install Keda
     * Install Ingress Nginx
     * Install Argo CD
+    * Install Monitoring Stack
 
 * Configurar ARGO CD
     * Acessar o argo cd pela url do load balancer/
@@ -77,6 +87,7 @@
         Username: Your GitHub username
         Password: Personal Access Token (PAT) with repo scope
         Click Connect
+
     * Executar a pipeline Deploy Gitops
 
 * Configurar os serviços:
@@ -96,29 +107,38 @@
 
 # Para o tech-challenge 4
 
-* Criar storageclass local pois via lab aws nao é possível usar o gp3 ou gp2
-    * Instalar o storageclass do rancher
+* Criado Storage Class local-path
 
-    kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.30/deploy/local-path-storage.yaml
-    kubect get pods -n local-path-storage
-
-    * Configurar nos recursos que tem pvc o seguinte storageClass:
-
-    storageClassName: local-path
-
-* Nova base para o grafana
-    * Adicionado uma nova base no terraform, rds-dev-04 com database grafana_db
-    * Configurar values.yaml do grafana-community helm chart
-    * Criado o usuário para a base grafana_db
-        CREATE USER grafana WITH PASSWORD '<senha>';
-        GRANT ALL PRIVILEGES ON DATABASE grafana_db TO grafana;
-        ALTER DATABASE grafana_db OWNER TO grafana;
-        ALTER SCHEMA public OWNER TO grafana;
-        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO grafana;
-        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO grafana;
-
+* Adicionado workflow para instalar stack de monitoramento
 
 * Adicionado o addon kube-state-metrics e metrics-server no cluster
 
-* Adicionado o grafana tempo
+* Configurado o grafana com datasource tempo, loki e prometheus
 
+-----
+
+# O que falta
+
+* Criar dashboard com monitoramento do cluster
+* Criar dashboard com logs dos microserviços
+* Criar dashboard com monitoramento das metricas dos microserviços
+* Plus: Adicionar o traceid no log para fazer o trace to log + log output em logback
+* Instalar new relic gratuito
+* Distributed tracing: Ao fazer uma requisição no evaluation-service, o APM deve mostrar o trace da requisição
+* Service Map: o APM deve mostrar as dependencias dos 5 microserviços
+
+* Criar alerta no APM ou Grafana para taxa de erros 5xx do auth-service maior que 5%
+* Criar conta no pagerduty e abrir um incidente automaticamente
+* Configurar notificação para envio pro Slack, Discord ou teams
+* Ao gerar um alerta, criar um automation runbook ou aws lambda para reiniciar o auth-service
+
+# Evidências
+
+* Código IaC/Gitops com a inclusão da stack de monitoramento
+* Código fonte das aplicações com inclusão opentelemetry
+* Script e automação para o automation runbook
+
+* Print do Dashboard do Grafana.
+* Print de um Trace distribuído no APM.
+* Print da notificação de incidente no ChatOps.
+* Print do log/execução da automação de Self-Healing.
