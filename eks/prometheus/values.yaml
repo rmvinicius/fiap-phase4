@@ -19,7 +19,7 @@ prometheus-pushgateway:
 
 server:
   extraArgs:
-    - --web.enable-otlp-receiver
+    web.enable-otlp-receiver: "true"
   global:
     scrape_interval: 1m
     scrape_timeout: 10s
