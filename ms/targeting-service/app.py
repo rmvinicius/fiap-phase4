@@ -7,6 +7,7 @@ import psycopg2
 import requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+from prometheus_flask_exporter import PrometheusMetrics
 from psycopg2.extras import Json, RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
 
@@ -50,6 +51,7 @@ if OTEL_ENDPOINT:
         log.warning(f"Falha ao inicializar OpenTelemetry: {e}")
 
 app = Flask(__name__)
+PrometheusMetrics(app, path="/metrics")
 
 if _otel_enabled:
     try:

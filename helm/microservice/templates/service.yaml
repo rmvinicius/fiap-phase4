@@ -3,11 +3,18 @@ kind: Service
 metadata:
   name: {{ .Values.name }}-svc
   namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.name }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.service.type }}
   selector:
     app: {{ .Values.name }}
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: {{ .Values.port }}
       targetPort: {{ .Values.port }}

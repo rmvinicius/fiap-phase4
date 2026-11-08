@@ -38,6 +38,15 @@ probes:
     failureThreshold: 3
 service:
   type: ClusterIP
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8003"
+    prometheus.io/path: "/metrics"
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8003"
+  prometheus.io/path: "/metrics"
 hpa:
   enabled: false
   minReplicas: 1

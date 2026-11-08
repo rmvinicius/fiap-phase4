@@ -153,7 +153,10 @@ if OTEL_ENDPOINT:
 
 # --- Servidor Flask (Apenas para Health Check) ---
 
+from prometheus_flask_exporter import PrometheusMetrics
+
 app = Flask(__name__)
+PrometheusMetrics(app, path="/metrics")
 
 if _otel_enabled:
     try:
