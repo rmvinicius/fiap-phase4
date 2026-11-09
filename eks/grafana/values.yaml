@@ -115,3 +115,5 @@ datasources:
           tracesToLogs:
             enabled: true
             datasourceUid: loki
+            filterByTraceID: true
+            filterBySpanID: true
