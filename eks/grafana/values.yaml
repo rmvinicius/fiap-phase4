@@ -91,12 +91,14 @@ datasources:
             - datasourceUid: tempo
               matcherRegex: 'trace_id":\s*"([a-fA-F0-9]+)'
               name: trace_id
+              query: ${__value.raw}
               url: ${__value.raw}
               urlDisplayLabel: View Trace
               internalLink: tempo
             - datasourceUid: tempo
               matcherRegex: 'span_id":\s*"([a-fA-F0-9]+)'
               name: span_id
+              query: ${__value.raw}
               url: ${__value.raw}
               urlDisplayLabel: View Span
               internalLink: tempo
