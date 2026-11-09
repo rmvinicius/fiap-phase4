@@ -1505,3 +1505,1331 @@ data:
       "uid": "fiap4-services-metrics",
       "version": 1
     }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-logs-services
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "FIAP Phase 4"
+data:
+  cluster-metrics.json: |
+    {
+      "apiVersion": "dashboard.grafana.app/v2",
+      "kind": "Dashboard",
+      "metadata": {
+        "name": "ffmjh8vtqel1ce",
+        "namespace": "default",
+        "uid": "08b83e95-0127-4fda-b05f-664c06d62f6e",
+        "resourceVersion": "1794232337572266",
+        "generation": 9,
+        "creationTimestamp": "2026-11-08T16:05:53Z",
+        "labels": {
+          "grafana.app/deprecatedInternalID": "169"
+        },
+        "annotations": {
+          "grafana.app/createdBy": "user:bg3hs372gqn7kc",
+          "grafana.app/saved-from-ui": "Grafana v13.3.0 (6f8ce3c693)",
+          "grafana.app/updatedBy": "user:bg3hs372gqn7kc",
+          "grafana.app/updatedTimestamp": "2026-11-09T13:55:04Z"
+        }
+      },
+      "spec": {
+        "annotations": [
+          {
+            "kind": "AnnotationQuery",
+            "spec": {
+              "query": {
+                "kind": "DataQuery",
+                "group": "grafana",
+                "version": "v0",
+                "datasource": {
+                  "name": "grafana"
+                },
+                "spec": {}
+              },
+              "enable": false,
+              "hide": true,
+              "iconColor": "rgba(0, 211, 255, 1)",
+              "name": "Annotations & Alerts",
+              "builtIn": true,
+              "legacyOptions": {
+                "enabled": true
+              }
+            }
+          }
+        ],
+        "cursorSync": "Off",
+        "description": "Container/Pod Log Dashboard (Loki as DataSource) with service-level metrics",
+        "editable": true,
+        "elements": {
+          "panel-11": {
+            "kind": "Panel",
+            "spec": {
+              "id": 11,
+              "title": "Total Count of logs",
+              "description": "Total count of log lines in the specified time range",
+              "links": [],
+              "data": {
+                "kind": "QueryGroup",
+                "spec": {
+                  "queries": [
+                    {
+                      "kind": "PanelQuery",
+                      "spec": {
+                        "query": {
+                          "kind": "DataQuery",
+                          "group": "loki",
+                          "version": "v0",
+                          "datasource": {
+                            "name": "ag3m9pm8t36dcf"
+                          },
+                          "spec": {
+                            "direction": "backward",
+                            "editorMode": "code",
+                            "expr": "sum(count_over_time({namespace=\"$namespace\", pod=~\"$pod\", container=~\"$service\"} [$__interval]))",
+                            "queryType": "range"
+                          }
+                        },
+                        "refId": "A",
+                        "hidden": false
+                      }
+                    }
+                  ],
+                  "transformations": [],
+                  "queryOptions": {
+                    "maxDataPoints": 100
+                  }
+                }
+              },
+              "vizConfig": {
+                "kind": "VizConfig",
+                "group": "stat",
+                "version": "13.3.0",
+                "spec": {
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "percentChangeColorMode": "standard",
+                    "reduceOptions": {
+                      "calcs": [
+                        "sum"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "unit": "short",
+                      "mappings": [
+                        {
+                          "type": "special",
+                          "options": {
+                            "match": "null",
+                            "result": {
+                              "text": "0",
+                              "color": "rgb(31, 255, 7)"
+                            }
+                          }
+                        }
+                      ],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "value": 0,
+                            "color": "rgb(31, 255, 7)"
+                          },
+                          {
+                            "value": 10,
+                            "color": "rgb(31, 255, 7)"
+                          },
+                          {
+                            "value": 50,
+                            "color": "rgb(31, 255, 7)"
+                          }
+                        ]
+                      },
+                      "color": {
+                        "mode": "thresholds"
+                      }
+                    },
+                    "overrides": []
+                  }
+                }
+              }
+            }
+          },
+          "panel-12": {
+            "kind": "Panel",
+            "spec": {
+              "id": 12,
+              "title": "Error/Fatal Log Count",
+              "description": "Count of error and fatal log lines in the specified time range",
+              "links": [],
+              "data": {
+                "kind": "QueryGroup",
+                "spec": {
+                  "queries": [
+                    {
+                      "kind": "PanelQuery",
+                      "spec": {
+                        "query": {
+                          "kind": "DataQuery",
+                          "group": "loki",
+                          "version": "v0",
+                          "datasource": {
+                            "name": "ag3m9pm8t36dcf"
+                          },
+                          "spec": {
+                            "direction": "backward",
+                            "editorMode": "code",
+                            "expr": "sum(count_over_time({namespace=\"$namespace\", pod=~\"$pod\", container=~\"$service\"} | detected_level =~ \"(?i)(error|fatal|panic)\" [$__interval]))",
+                            "queryType": "range"
+                          }
+                        },
+                        "refId": "A",
+                        "hidden": false
+                      }
+                    }
+                  ],
+                  "transformations": [],
+                  "queryOptions": {
+                    "maxDataPoints": 100
+                  }
+                }
+              },
+              "vizConfig": {
+                "kind": "VizConfig",
+                "group": "stat",
+                "version": "13.3.0",
+                "spec": {
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "percentChangeColorMode": "standard",
+                    "reduceOptions": {
+                      "calcs": [
+                        "sum"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "unit": "short",
+                      "mappings": [
+                        {
+                          "type": "special",
+                          "options": {
+                            "match": "null",
+                            "result": {
+                              "text": "0",
+                              "color": "rgb(245, 54, 54)"
+                            }
+                          }
+                        }
+                      ],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "value": 0,
+                            "color": "rgb(31, 255, 7)"
+                          },
+                          {
+                            "value": 1,
+                            "color": "rgb(245, 54, 54)"
+                          }
+                        ]
+                      },
+                      "color": {
+                        "mode": "thresholds"
+                      }
+                    },
+                    "overrides": []
+                  }
+                }
+              }
+            }
+          },
+          "panel-13": {
+            "kind": "Panel",
+            "spec": {
+              "id": 13,
+              "title": "Error Rate by Service",
+              "description": "Percentage of error/fatal logs per service",
+              "links": [],
+              "data": {
+                "kind": "QueryGroup",
+                "spec": {
+                  "queries": [
+                    {
+                      "kind": "PanelQuery",
+                      "spec": {
+                        "query": {
+                          "kind": "DataQuery",
+                          "group": "loki",
+                          "version": "v0",
+                          "datasource": {
+                            "name": "ag3m9pm8t36dcf"
+                          },
+                          "spec": {
+                            "direction": "backward",
+                            "editorMode": "code",
+                            "expr": "sum by (container) (count_over_time({namespace=\"$namespace\", pod=~\"$pod\", container=~\"$service\"} | detected_level =~ \"(?i)(error|fatal|panic)\" [$__interval])) / clamp_min(sum by (container) (count_over_time({namespace=\"$namespace\", pod=~\"$pod\", container=~\"$service\"} [$__interval])), 1)",
+                            "queryType": "range"
+                          }
+                        },
+                        "refId": "A",
+                        "hidden": false
+                      }
+                    }
+                  ],
+                  "transformations": [],
+                  "queryOptions": {
+                    "maxDataPoints": 100
+                  }
+                }
+              },
+              "vizConfig": {
+                "kind": "VizConfig",
+                "group": "timeseries",
+                "version": "13.3.0",
+                "spec": {
+                  "options": {
+                    "alertThreshold": true,
+                    "legend": {
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
+                    },
+                    "tooltip": {
+                      "hideZeros": false,
+                      "mode": "multi",
+                      "sort": "desc"
+                    }
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "unit": "percentunit",
+                      "min": 0,
+                      "max": 1,
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "value": 0,
+                            "color": "rgb(31, 255, 7)"
+                          },
+                          {
+                            "value": 0.05,
+                            "color": "rgb(237, 129, 40)"
+                          },
+                          {
+                            "value": 0.1,
+                            "color": "rgb(245, 54, 54)"
+                          }
+                        ]
+                      },
+                      "color": {
+                        "mode": "palette-classic"
+                      },
+                      "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 40,
+                        "gradientMode": "opacity",
+                        "hideFrom": {
+                          "legend": false,
+                          "tooltip": false,
+                          "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 6,
+                        "scaleDistribution": {
+                          "type": "linear"
+                        },
+                        "showPoints": "always",
+                        "showValues": false,
+                        "spanNulls": false,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "off"
+                        }
+                      }
+                    },
+                    "overrides": []
+                  }
+                }
+              }
+            }
+          },
+          "panel-14": {
+            "kind": "Panel",
+            "spec": {
+              "id": 14,
+              "title": "Log Volume by Service",
+              "description": "Log line count per service/container",
+              "links": [],
+              "data": {
+                "kind": "QueryGroup",
+                    "spec": {
+                      "queries": [
+                        {
+                          "kind": "PanelQuery",
+                          "spec": {
+                            "query": {
+                              "kind": "DataQuery",
+                              "group": "loki",
+                              "version": "v0",
+                              "datasource": {
+                                "name": "ag3m9pm8t36dcf"
+                              },
+                              "spec": {
+                                "direction": "backward",
+                                "editorMode": "code",
+                                "expr": "sum by (container) (count_over_time({namespace=\"$namespace\", pod=~\"$pod\", container=~\"$service\"} [$__interval]))",
+                                "queryType": "range"
+                              }
+                            },
+                            "refId": "A",
+                            "hidden": false
+                          }
+                        }
+                      ],
+                      "transformations": [],
+                      "queryOptions": {
+                        "maxDataPoints": 100
+                      }
+                    }
+                  },
+              "vizConfig": {
+                "kind": "VizConfig",
+                "group": "timeseries",
+                "version": "13.3.0",
+                "spec": {
+                  "options": {
+                    "alertThreshold": true,
+                    "legend": {
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
+                    },
+                    "tooltip": {
+                      "hideZeros": false,
+                      "mode": "multi",
+                      "sort": "desc"
+                    }
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "unit": "short",
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "value": 0,
+                            "color": "green"
+                          }
+                        ]
+                      },
+                      "color": {
+                        "mode": "palette-classic"
+                      },
+                      "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 40,
+                        "gradientMode": "opacity",
+                        "hideFrom": {
+                          "legend": false,
+                          "tooltip": false,
+                          "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 6,
+                        "scaleDistribution": {
+                          "type": "linear"
+                        },
+                        "showPoints": "always",
+                        "showValues": false,
+                        "spanNulls": false,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "off"
+                        }
+                      }
+                    },
+                    "overrides": []
+                  }
+                }
+              }
+            }
+          },
+          "panel-15": {
+            "kind": "Panel",
+            "spec": {
+              "id": 15,
+              "title": "Log Volume by Log Level",
+              "description": "Log line count per detected level",
+              "links": [],
+              "data": {
+                "kind": "QueryGroup",
+                "spec": {
+                  "queries": [
+                    {
+                      "kind": "PanelQuery",
+                      "spec": {
+                        "query": {
+                          "kind": "DataQuery",
+                          "group": "loki",
+                          "version": "v0",
+                          "datasource": {
+                            "name": "ag3m9pm8t36dcf"
+                          },
+                          "spec": {
+                            "direction": "backward",
+                            "editorMode": "code",
+                            "expr": "sum by (detected_level) (count_over_time({namespace=\"$namespace\", pod=~\"$pod\", container=~\"$service\"} [$__interval]))",
+                            "queryType": "range"
+                          }
+                        },
+                        "refId": "A",
+                        "hidden": false
+                      }
+                    }
+                  ],
+                  "transformations": [],
+                  "queryOptions": {
+                    "maxDataPoints": 100
+                  }
+                }
+              },
+              "vizConfig": {
+                "kind": "VizConfig",
+                "group": "timeseries",
+                "version": "13.3.0",
+                "spec": {
+                  "options": {
+                    "alertThreshold": true,
+                    "legend": {
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
+                    },
+                    "tooltip": {
+                      "hideZeros": false,
+                      "mode": "multi",
+                      "sort": "desc"
+                    }
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "unit": "short",
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "value": 0,
+                            "color": "green"
+                          }
+                        ]
+                      },
+                      "color": {
+                        "mode": "thresholds"
+                      },
+                      "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 40,
+                        "gradientMode": "opacity",
+                        "hideFrom": {
+                          "legend": false,
+                          "tooltip": false,
+                          "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 6,
+                        "scaleDistribution": {
+                          "type": "linear"
+                        },
+                        "showPoints": "always",
+                        "showValues": false,
+                        "spanNulls": false,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "off"
+                        }
+                      }
+                    },
+                    "overrides": [
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "error"
+                        },
+                        "properties": [
+                          {
+                            "id": "color",
+                            "value": {
+                              "fixedColor": "#C4162A",
+                              "mode": "fixed"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "warn"
+                        },
+                        "properties": [
+                          {
+                            "id": "color",
+                            "value": {
+                              "fixedColor": "#E0B400",
+                              "mode": "fixed"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "info"
+                        },
+                        "properties": [
+                          {
+                            "id": "color",
+                            "value": {
+                              "fixedColor": "#56A64B",
+                              "mode": "fixed"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "debug"
+                        },
+                        "properties": [
+                          {
+                            "id": "color",
+                            "value": {
+                              "fixedColor": "#1E90FF",
+                              "mode": "fixed"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "panel-2": {
+            "kind": "Panel",
+            "spec": {
+              "id": 2,
+              "title": "Logs",
+              "description": "Live logs - like 'tail -f' in real time",
+              "links": [],
+              "data": {
+                "kind": "QueryGroup",
+                "spec": {
+                  "queries": [
+                    {
+                      "kind": "PanelQuery",
+                      "spec": {
+                        "query": {
+                          "kind": "DataQuery",
+                          "group": "loki",
+                          "version": "v0",
+                          "datasource": {
+                            "name": "ag3m9pm8t36dcf"
+                          },
+                          "spec": {
+                            "direction": "backward",
+                            "editorMode": "code",
+                            "expr": "{namespace=\"$namespace\", container=~\"$service\", pod=~\"$pod\"} \n| detected_level =~ `$loglevel`\n|~ `(?i)$searchable_pattern`",
+                            "queryType": "range"
+                          }
+                        },
+                        "refId": "A",
+                        "hidden": false
+                      }
+                    }
+                  ],
+                  "transformations": [],
+                  "queryOptions": {}
+                }
+              },
+              "vizConfig": {
+                "kind": "VizConfig",
+                "group": "logs",
+                "version": "13.3.0",
+                "spec": {
+                  "options": {
+                    "dedupStrategy": "none",
+                    "displayedFields": [],
+                    "enableInfiniteScrolling": true,
+                    "enableLogDetails": true,
+                    "prettifyLogMessage": false,
+                    "showCommonLabels": true,
+                    "showControls": true,
+                    "showFieldSelector": true,
+                    "showLabels": true,
+                    "showLevel": true,
+                    "showLogAttributes": true,
+                    "showTime": true,
+                    "sortOrder": "Descending",
+                    "timestampResolution": "ms",
+                    "unwrappedColumns": false,
+                    "wrapLogMessage": true
+                  },
+                  "fieldConfig": {
+                    "defaults": {},
+                    "overrides": []
+                  }
+                }
+              }
+            }
+          },
+          "panel-6": {
+            "kind": "Panel",
+            "spec": {
+              "id": 6,
+              "title": "Total Count of: $loglevel",
+              "description": "Total count of loglevel $searchable_pattern in the specified time range",
+              "links": [],
+              "data": {
+                "kind": "QueryGroup",
+                "spec": {
+                  "queries": [
+                    {
+                      "kind": "PanelQuery",
+                      "spec": {
+                        "query": {
+                          "kind": "DataQuery",
+                          "group": "loki",
+                          "version": "v0",
+                          "datasource": {
+                            "name": "ag3m9pm8t36dcf"
+                          },
+                          "spec": {
+                            "direction": "backward",
+                            "editorMode": "code",
+                            "expr": "sum(count_over_time({namespace=\"$namespace\", pod=~\"$pod\", container=~\"$service\"} | detected_level =~ `$loglevel` |~ `(?i)$searchable_pattern` [$__interval]))",
+                            "queryType": "range"
+                          }
+                        },
+                        "refId": "B",
+                        "hidden": false
+                      }
+                    }
+                  ],
+                  "transformations": [],
+                  "queryOptions": {
+                    "maxDataPoints": 100
+                  }
+                }
+              },
+              "vizConfig": {
+                "kind": "VizConfig",
+                "group": "stat",
+                "version": "13.3.0",
+                "spec": {
+                  "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "justifyMode": "auto",
+                    "orientation": "horizontal",
+                    "percentChangeColorMode": "standard",
+                    "reduceOptions": {
+                      "calcs": [
+                        "sum"
+                      ],
+                      "fields": "",
+                      "values": false
+                    },
+                    "showPercentChange": false,
+                    "textMode": "auto",
+                    "wideLayout": true
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "unit": "short",
+                      "mappings": [
+                        {
+                          "type": "special",
+                          "options": {
+                            "match": "null",
+                            "result": {
+                              "text": "0"
+                            }
+                          }
+                        }
+                      ],
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "value": 0,
+                            "color": "green"
+                          }
+                        ]
+                      },
+                      "color": {
+                        "mode": "thresholds"
+                      }
+                    },
+                    "overrides": []
+                  }
+                }
+              }
+            }
+          },
+          "panel-7": {
+            "kind": "Panel",
+            "spec": {
+              "id": 7,
+              "title": "Count of stderr / stdout historical",
+              "description": "",
+              "links": [],
+              "data": {
+                "kind": "QueryGroup",
+                "spec": {
+                  "queries": [
+                    {
+                      "kind": "PanelQuery",
+                      "spec": {
+                        "query": {
+                          "kind": "DataQuery",
+                          "group": "loki",
+                          "version": "v0",
+                          "datasource": {
+                            "name": "ag3m9pm8t36dcf"
+                          },
+                          "spec": {
+                            "direction": "backward",
+                            "editorMode": "code",
+                            "expr": "sum by(stream) (count_over_time({namespace=\"$namespace\", pod=~\"$pod\", container=~\"$service\"} [$__interval]))",
+                            "queryType": "range"
+                          }
+                        },
+                        "refId": "A",
+                        "hidden": false
+                      }
+                    }
+                  ],
+                  "transformations": [],
+                  "queryOptions": {
+                    "maxDataPoints": 100
+                  }
+                }
+              },
+              "vizConfig": {
+                "kind": "VizConfig",
+                "group": "timeseries",
+                "version": "13.3.0",
+                "spec": {
+                  "options": {
+                    "alertThreshold": true,
+                    "legend": {
+                      "calcs": [],
+                      "displayMode": "list",
+                      "placement": "bottom",
+                      "showLegend": true
+                    },
+                    "tooltip": {
+                      "hideZeros": false,
+                      "mode": "multi",
+                      "sort": "desc"
+                    }
+                  },
+                  "fieldConfig": {
+                    "defaults": {
+                      "unit": "none",
+                      "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                          {
+                            "value": 0,
+                            "color": "green"
+                          },
+                          {
+                            "value": 80,
+                            "color": "red"
+                          }
+                        ]
+                      },
+                      "color": {
+                        "mode": "palette-classic"
+                      },
+                      "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "barWidthFactor": 0.6,
+                        "drawStyle": "line",
+                        "fillOpacity": 40,
+                        "gradientMode": "opacity",
+                        "hideFrom": {
+                          "legend": false,
+                          "tooltip": false,
+                          "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 6,
+                        "scaleDistribution": {
+                          "type": "linear"
+                        },
+                        "showPoints": "always",
+                        "showValues": false,
+                        "spanNulls": false,
+                        "stacking": {
+                          "group": "A",
+                          "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                          "mode": "off"
+                        }
+                      }
+                    },
+                    "overrides": [
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "{stream=\"stderr\"} stderr"
+                        },
+                        "properties": [
+                          {
+                            "id": "color",
+                            "value": {
+                              "fixedColor": "#C4162A",
+                              "mode": "fixed"
+                            }
+                          },
+                          {
+                            "id": "custom.lineWidth",
+                            "value": 2
+                          }
+                        ]
+                      },
+                      {
+                        "matcher": {
+                          "id": "byName",
+                          "options": "{stream=\"stdout\"} stdout"
+                        },
+                        "properties": [
+                          {
+                            "id": "color",
+                            "value": {
+                              "fixedColor": "#56A64B",
+                              "mode": "fixed"
+                            }
+                          },
+                          {
+                            "id": "custom.lineWidth",
+                            "value": 2
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "layout": {
+          "kind": "GridLayout",
+          "spec": {
+            "items": [
+              {
+                "kind": "GridLayoutItem",
+                "spec": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 8,
+                  "height": 3,
+                  "element": {
+                    "kind": "ElementReference",
+                    "name": "panel-11"
+                  }
+                }
+              },
+              {
+                "kind": "GridLayoutItem",
+                "spec": {
+                  "x": 8,
+                  "y": 0,
+                  "width": 8,
+                  "height": 3,
+                  "element": {
+                    "kind": "ElementReference",
+                    "name": "panel-12"
+                  }
+                }
+              },
+              {
+                "kind": "GridLayoutItem",
+                "spec": {
+                  "x": 16,
+                  "y": 0,
+                  "width": 8,
+                  "height": 3,
+                  "element": {
+                    "kind": "ElementReference",
+                    "name": "panel-6"
+                  }
+                }
+              },
+              {
+                "kind": "GridLayoutItem",
+                "spec": {
+                  "x": 0,
+                  "y": 3,
+                  "width": 16,
+                  "height": 6,
+                  "element": {
+                    "kind": "ElementReference",
+                    "name": "panel-7"
+                  }
+                }
+              },
+              {
+                "kind": "GridLayoutItem",
+                "spec": {
+                  "x": 16,
+                  "y": 3,
+                  "width": 8,
+                  "height": 6,
+                  "element": {
+                    "kind": "ElementReference",
+                    "name": "panel-14"
+                  }
+                }
+              },
+              {
+                "kind": "GridLayoutItem",
+                "spec": {
+                  "x": 0,
+                  "y": 9,
+                  "width": 16,
+                  "height": 6,
+                  "element": {
+                    "kind": "ElementReference",
+                    "name": "panel-15"
+                  }
+                }
+              },
+              {
+                "kind": "GridLayoutItem",
+                "spec": {
+                  "x": 16,
+                  "y": 9,
+                  "width": 8,
+                  "height": 6,
+                  "element": {
+                    "kind": "ElementReference",
+                    "name": "panel-13"
+                  }
+                }
+              },
+              {
+                "kind": "GridLayoutItem",
+                "spec": {
+                  "x": 0,
+                  "y": 15,
+                  "width": 24,
+                  "height": 21,
+                  "element": {
+                    "kind": "ElementReference",
+                    "name": "panel-2"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "links": [],
+        "liveNow": false,
+        "preload": false,
+        "tags": ["logs", "loki", "microservices"],
+        "timeSettings": {
+          "timezone": "browser",
+          "from": "now-12h",
+          "to": "now",
+          "autoRefresh": "",
+          "autoRefreshIntervals": [
+            "10s",
+            "30s",
+            "1m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "1d"
+          ],
+          "hideTimepicker": false,
+          "fiscalYearStartMonth": 0
+        },
+        "title": "FIAP Phase 4 - Logs (Loki)",
+        "variables": [
+          {
+            "kind": "QueryVariable",
+            "spec": {
+              "name": "namespace",
+              "current": {
+                "text": "application",
+                "value": "application"
+              },
+              "label": "Namespace",
+              "hide": "dontHide",
+              "refresh": "onTimeRangeChanged",
+              "skipUrlSync": false,
+              "query": {
+                "kind": "DataQuery",
+                "group": "loki",
+                "version": "v0",
+                "datasource": {
+                  "name": "ag3m9pm8t36dcf"
+                },
+                "spec": {
+                  "label": "namespace",
+                  "refId": "LokiVariableQueryEditor-VariableQuery",
+                  "stream": "",
+                  "type": 1
+                }
+              },
+              "regex": "",
+              "regexApplyTo": "value",
+              "sort": "disabled",
+              "definition": "",
+              "options": [],
+              "multi": false,
+              "includeAll": false,
+              "allowCustomValue": false
+            }
+          },
+          {
+            "kind": "QueryVariable",
+            "spec": {
+              "name": "service",
+              "current": {
+                "text": "All",
+                "value": "$__all"
+              },
+              "label": "Service (container)",
+              "hide": "dontHide",
+              "refresh": "onTimeRangeChanged",
+              "skipUrlSync": false,
+              "query": {
+                "kind": "DataQuery",
+                "group": "loki",
+                "version": "v0",
+                "datasource": {
+                  "name": "ag3m9pm8t36dcf"
+                },
+                "spec": {
+                  "label": "container",
+                  "refId": "LokiVariableQueryEditor-VariableQuery",
+                  "stream": "{namespace=~\"$namespace\"}",
+                  "type": 1
+                }
+              },
+              "regex": "",
+              "regexApplyTo": "value",
+              "sort": "disabled",
+              "definition": "",
+              "options": [],
+              "multi": false,
+              "includeAll": true,
+              "allowCustomValue": true
+            }
+          },
+          {
+            "kind": "QueryVariable",
+            "spec": {
+              "name": "pod",
+              "current": {
+                "text": "All",
+                "value": "$__all"
+              },
+              "label": "Pod",
+              "hide": "dontHide",
+              "refresh": "onTimeRangeChanged",
+              "skipUrlSync": false,
+              "query": {
+                "kind": "DataQuery",
+                "group": "loki",
+                "version": "v0",
+                "datasource": {
+                  "name": "ag3m9pm8t36dcf"
+                },
+                "spec": {
+                  "label": "pod",
+                  "refId": "LokiVariableQueryEditor-VariableQuery",
+                  "stream": "{namespace=\"$namespace\", container=~\"$service\"}",
+                  "type": 1
+                }
+              },
+              "regex": "",
+              "regexApplyTo": "value",
+              "sort": "disabled",
+              "definition": "",
+              "options": [],
+              "multi": false,
+              "includeAll": true,
+              "allowCustomValue": true
+            }
+          },
+          {
+            "kind": "CustomVariable",
+            "spec": {
+              "name": "loglevel",
+              "query": "error, warn, info, debug",
+              "current": {
+                "text": "$__all",
+                "value": "$__all"
+              },
+              "options": [
+                {
+                  "selected": false,
+                  "text": "All",
+                  "value": ".+"
+                },
+                {
+                  "selected": false,
+                  "text": "DEBUG",
+                  "value": "(?i)debug"
+                },
+                {
+                  "selected": false,
+                  "text": "INFO",
+                  "value": "(?i)info"
+                },
+                {
+                  "selected": false,
+                  "text": "WARN",
+                  "value": "(?i)warn"
+                },
+                {
+                  "selected": false,
+                  "text": "ERROR",
+                  "value": "(?i)(error|fatal|panic)"
+                }
+              ],
+              "multi": false,
+              "includeAll": true,
+              "allValue": ".+",
+              "label": "Log level",
+              "hide": "dontHide",
+              "skipUrlSync": false,
+              "allowCustomValue": false,
+              "valuesFormat": "csv"
+            }
+          },
+          {
+            "kind": "TextVariable",
+            "spec": {
+              "name": "searchable_pattern",
+              "current": {
+                "text": "",
+                "value": ""
+              },
+              "query": "",
+              "label": "Search (case insensitive)",
+              "hide": "dontHide",
+              "skipUrlSync": false
+            }
+          },
+          {
+            "kind": "AdhocVariable",
+            "group": "loki",
+            "datasource": {
+              "name": "ag3m9pm8t36dcf"
+            },
+            "spec": {
+              "name": "Filters",
+              "baseFilters": [],
+              "filters": [],
+              "defaultKeys": [],
+              "hide": "dontHide",
+              "skipUrlSync": false,
+              "allowCustomValue": true,
+              "enableGroupBy": false
+            }
+          }
+        ],
+        "preferences": {
+          "layout": {
+            "kind": "GridLayout",
+            "spec": {
+              "items": []
+            }
+          }
+        }
+      }
+    }
