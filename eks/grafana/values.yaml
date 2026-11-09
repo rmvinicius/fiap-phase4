@@ -66,7 +66,52 @@ sidecar:
     labelValue: "1"
     searchNamespace: monitoring
     folderAnnotation: grafana_folder
-    provider:
-      foldersFromFilesStructure: false
-      disableDelete: false
-      allowUiUpdates: true
+      provider:
+        foldersFromFilesStructure: false
+        disableDelete: false
+        allowUiUpdates: true
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: alertmanager
+        type: prometheus
+        access: proxy
+        url: http://prometheus-alertmanager.monitoring.svc.cluster.local:9093
+        jsonData:
+          skipTlsVerify: true
+      - name: loki
+        type: loki
+        access: proxy
+        url: http://loki-gateway.monitoring.svc.cluster.local
+        jsonData:
+          skipTlsVerify: true
+          derivedFields:
+            - datasourceUid: tempo
+              matcherRegex: 'trace_id":\s*"([a-fA-F0-9]+)'
+              name: trace_id
+              url: ${__value.raw}
+              urlDisplayLabel: View Trace
+              internalLink: tempo
+            - datasourceUid: tempo
+              matcherRegex: 'span_id":\s*"([a-fA-F0-9]+)'
+              name: span_id
+              url: ${__value.raw}
+              urlDisplayLabel: View Span
+              internalLink: tempo
+      - name: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.monitoring.svc.cluster.local
+        jsonData:
+          skipTlsVerify: true
+      - name: tempo
+        type: tempo
+        access: proxy
+        url: http://tempo.monitoring.svc.cluster.local:3200
+        jsonData:
+          skipTlsVerify: true
+          tracesToLogs:
+            enabled: true
+            datasourceUid: loki
