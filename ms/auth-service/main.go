@@ -93,6 +93,14 @@ func instrument(path string, next http.Handler) http.Handler {
 		status := strconv.Itoa(rec.status)
 		httpRequestsTotal.WithLabelValues(r.Method, path, status).Inc()
 		httpRequestDuration.WithLabelValues(r.Method, path, status).Observe(time.Since(start).Seconds())
+
+		log := logger.With(traceFields(r.Context())...)
+		log.Info("HTTP request",
+			zap.String("method", r.Method),
+			zap.String("path", path),
+			zap.String("status", status),
+			zap.Float64("duration_ms", time.Since(start).Seconds()*1000),
+		)
 	})
 }
 

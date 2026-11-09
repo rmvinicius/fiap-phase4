@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import time
 from functools import wraps
 from typing import Any
 
@@ -13,8 +14,8 @@ from psycopg2.extras import Json, RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
 from pythonjsonlogger import jsonlogger
 
-# Configura o logging estruturado JSON com trace_id do OpenTelemetry
 
+# Configura o logging estruturado JSON com trace_id do OpenTelemetry
 class OpenTelemetryJsonFormatter(jsonlogger.JsonFormatter):
     def add_fields(self, log_record: dict[str, Any], record: logging.LogRecord, message_dict: dict[str, Any]) -> None:
         super().add_fields(log_record, record, message_dict)
@@ -31,16 +32,26 @@ class OpenTelemetryJsonFormatter(jsonlogger.JsonFormatter):
         except (ImportError, AttributeError):
             # OpenTelemetry not available or span context not accessible
             pass
+        # Ensure level is always present
+        if 'level' not in log_record:
+            log_record['level'] = record.levelname
 
 # Configura o logger raiz com JSON formatter
 handler = logging.StreamHandler()
 handler.setFormatter(OpenTelemetryJsonFormatter(
-    '%(timestamp)s %(level)s %(name)s %(message)s',
+    '%(timestamp)s %(levelname)s %(name)s %(message)s',
     timestamp=True
 ))
 root_logger = logging.getLogger()
 root_logger.handlers = [handler]
 root_logger.setLevel(logging.INFO)
+
+# Configure gunicorn loggers to use our handler
+for logger_name in ['gunicorn', 'gunicorn.access', 'gunicorn.error']:
+    gunicorn_logger = logging.getLogger(logger_name)
+    gunicorn_logger.handlers = [handler]
+    gunicorn_logger.setLevel(logging.INFO)
+    gunicorn_logger.propagate = False
 
 log = logging.getLogger(__name__)
 
@@ -88,6 +99,25 @@ if _otel_enabled:
         FlaskInstrumentor().instrument_app(app)
     except Exception as e:  # noqa: BLE001
         log.warning(f"Falha ao instrumentar Flask: {e}")
+
+# --- HTTP Request Logging Middleware ---
+@app.before_request
+def log_request_start():
+    request._start_time = time.time()
+
+@app.after_request
+def log_request_end(response):
+    if hasattr(request, '_start_time'):
+        duration_ms = (time.time() - request._start_time) * 1000
+        log.info("HTTP request",
+            extra={
+                "method": request.method,
+                "path": request.path,
+                "status": response.status_code,
+                "duration_ms": round(duration_ms, 2),
+            }
+        )
+    return response
 
 # --- Configuração ---
 DATABASE_URL = os.getenv("DATABASE_URL")
