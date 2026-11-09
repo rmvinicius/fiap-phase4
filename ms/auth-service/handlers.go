@@ -3,12 +3,10 @@ package main
 import (
 	//"crypto/sha256"
 	//"encoding/hex"
-	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 
-	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 

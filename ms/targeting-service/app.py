@@ -13,7 +13,9 @@ from psycopg2.extras import Json, RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
 from pythonjsonlogger import jsonlogger
 
+
 # Configura o logging estruturado JSON com trace_id do OpenTelemetry
+
 class OpenTelemetryJsonFormatter(jsonlogger.JsonFormatter):
     def add_fields(self, log_record: dict[str, Any], record: logging.LogRecord, message_dict: dict[str, Any]) -> None:
         super().add_fields(log_record, record, message_dict)
