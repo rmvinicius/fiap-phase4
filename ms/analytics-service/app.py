@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify
 from pythonjsonlogger import jsonlogger
 
-
 # Configura o logging estruturado JSON com trace_id do OpenTelemetry
 
 class OpenTelemetryJsonFormatter(jsonlogger.JsonFormatter):
