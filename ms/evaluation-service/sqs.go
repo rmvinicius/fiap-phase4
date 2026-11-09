@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"go.uber.org/zap"
 )
 
 // Evento que será enviado para a fila
@@ -21,7 +22,7 @@ type EvaluationEvent struct {
 func (a *App) sendEvaluationEvent(userID, flagName string, result bool) {
 	// Se a URL da fila não foi configurada, apenas loga localmente e sai.
 	if a.SqsSvc == nil || a.SqsQueueURL == "" {
-		log.Printf("[SQS_DISABLED] Evento: User '%s', Flag '%s', Result '%t'", userID, flagName, result)
+		logger.Warn("[SQS_DISABLED] Evento", zap.String("user_id", userID), zap.String("flag_name", flagName), zap.Bool("result", result))
 		return
 	}
 
@@ -34,7 +35,7 @@ func (a *App) sendEvaluationEvent(userID, flagName string, result bool) {
 
 	body, err := json.Marshal(event)
 	if err != nil {
-		log.Printf("Erro ao serializar evento SQS: %v", err)
+		logger.Error("Erro ao serializar evento SQS", zap.Error(err))
 		return
 	}
 
@@ -45,8 +46,8 @@ func (a *App) sendEvaluationEvent(userID, flagName string, result bool) {
 	})
 
 	if err != nil {
-		log.Printf("Erro ao enviar mensagem para SQS: %v", err)
+		logger.Error("Erro ao enviar mensagem para SQS", zap.Error(err))
 	} else {
-		log.Printf("Evento de avaliação enviado para SQS (Flag: %s)", flagName)
+		logger.Info("Evento de avaliação enviado para SQS", zap.String("flag_name", flagName))
 	}
 }

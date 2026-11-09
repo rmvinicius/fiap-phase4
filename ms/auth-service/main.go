@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,7 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
+	"go.opentelemetry.io/contrib/bridges/otelzap"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -21,6 +20,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -39,10 +40,26 @@ var (
 		},
 		[]string{"method", "path", "status"},
 	)
+	logger *zap.Logger
 )
 
 func init() {
 	prometheus.MustRegister(httpRequestsTotal, httpRequestDuration)
+
+	cfg := zap.NewProductionConfig()
+	cfg.Encoding = "json"
+	cfg.EncoderConfig.TimeKey = "timestamp"
+	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	cfg.EncoderConfig.LevelKey = "level"
+	cfg.EncoderConfig.MessageKey = "message"
+	cfg.EncoderConfig.CallerKey = "caller"
+	cfg.EncoderConfig.StacktraceKey = "stacktrace"
+
+	var err error
+	logger, err = cfg.Build()
+	if err != nil {
+		panic(err)
+	}
 }
 
 type statusRecorder struct {
@@ -84,18 +101,18 @@ func main() {
 
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Fatal("DATABASE_URL deve ser definida")
+		logger.Fatal("DATABASE_URL deve ser definida")
 	}
 
 	masterKey := os.Getenv("MASTER_KEY")
 	if masterKey == "" {
-		log.Fatal("MASTER_KEY deve ser definida")
+		logger.Fatal("MASTER_KEY deve ser definida")
 	}
 
 	// --- Conexão com o Banco ---
 	db, err := connectDB(databaseURL)
 	if err != nil {
-		log.Fatalf("Não foi possível conectar ao banco de dados: %v", err)
+		logger.Fatal("Não foi possível conectar ao banco de dados", zap.Error(err))
 	}
 	defer db.Close()
 
@@ -129,9 +146,9 @@ func main() {
 	// Eles são protegidos pelo middleware de autenticação
 	mux.Handle("/admin/keys", instrument("/admin/keys", app.masterKeyAuthMiddleware(http.HandlerFunc(app.createKeyHandler))))
 
-	log.Printf("Serviço de Autenticação (Go) rodando na porta %s", port)
+	logger.Info("Serviço de Autenticação (Go) rodando na porta", zap.String("port", port))
 	if err := http.ListenAndServe(":"+port, otelhttp.NewHandler(mux, "auth-service")); err != nil {
-		log.Fatal(err)
+		logger.Fatal("Erro ao iniciar servidor", zap.Error(err))
 	}
 }
 
@@ -146,6 +163,6 @@ func connectDB(databaseURL string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	log.Println("Conectado ao PostgreSQL com sucesso!")
+	logger.Info("Conectado ao PostgreSQL com sucesso!")
 	return db, nil
 }

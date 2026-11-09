@@ -10,9 +10,35 @@ from flask import Flask, jsonify, request
 from prometheus_flask_exporter import PrometheusMetrics
 from psycopg2.extras import Json, RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
+from pythonjsonlogger import jsonlogger
 
-# Configura o logging
-logging.basicConfig(level=logging.INFO)
+# Configura o logging estruturado JSON com trace_id do OpenTelemetry
+class OpenTelemetryJsonFormatter(jsonlogger.JsonFormatter):
+    def add_fields(self, log_record, record, message_dict):
+        super().add_fields(log_record, record, message_dict)
+        # Adiciona trace_id e span_id do contexto OpenTelemetry
+        try:
+            from opentelemetry import trace
+            span = trace.get_current_span()
+            if span and span.get_span_context():
+                ctx = span.get_span_context()
+                if ctx.trace_id:
+                    log_record['trace_id'] = format(ctx.trace_id, '032x')
+                if ctx.span_id:
+                    log_record['span_id'] = format(ctx.span_id, '016x')
+        except Exception:
+            pass
+
+# Configura o logger raiz com JSON formatter
+handler = logging.StreamHandler()
+handler.setFormatter(OpenTelemetryJsonFormatter(
+    '%(timestamp)s %(level)s %(name)s %(message)s',
+    timestamp=True
+))
+root_logger = logging.getLogger()
+root_logger.handlers = [handler]
+root_logger.setLevel(logging.INFO)
+
 log = logging.getLogger(__name__)
 
 # Carrega .env para desenvolvimento local

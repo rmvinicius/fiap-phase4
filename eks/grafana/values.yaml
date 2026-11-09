@@ -8,7 +8,7 @@ resources:
     cpu: 100m
     memory: 256Mi
 
-automountServiceAccountToken: false
+automountServiceAccountToken: true
 
 testFramework:
   enabled: false
@@ -58,3 +58,15 @@ envValueFrom:
     secretKeyRef:
       name: grafana-secrets
       key: postgres-password
+
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    searchNamespace: monitoring
+    folderAnnotation: grafana_folder
+    provider:
+      foldersFromFilesStructure: false
+      disableDelete: false
+      allowUiUpdates: true

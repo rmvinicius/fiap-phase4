@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
+
+	"go.opentelemetry.io/contrib/bridges/otelzap"
+	"go.uber.org/zap"
 )
 
 type EvaluationResponse struct {
@@ -13,14 +15,16 @@ type EvaluationResponse struct {
 }
 
 func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
+	log := otelzap.L(r.Context())
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok"}); err != nil {
-		log.Printf("failed to encode health response: %v", err)
+		log.Error("failed to encode health response", zap.Error(err))
 	}
 }
 
 func (a *App) evaluationHandler(w http.ResponseWriter, r *http.Request) {
+	log := otelzap.L(r.Context())
 	w.Header().Set("Content-Type", "application/json")
 
 	// 1. Parsear os query parameters
@@ -40,7 +44,7 @@ func (a *App) evaluationHandler(w http.ResponseWriter, r *http.Request) {
 			result = false
 		} else {
 			// Outros erros (serviços offline, etc)
-			log.Printf("Erro ao avaliar flag '%s': %v", flagName, err)
+			log.Error("Erro ao avaliar flag", zap.String("flag_name", flagName), zap.Error(err))
 			http.Error(w, `{"error": "Erro interno ao avaliar a flag"}`, http.StatusBadGateway)
 			return
 		}
@@ -57,6 +61,6 @@ func (a *App) evaluationHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:   userID,
 		Result:   result,
 	}); err != nil {
-		log.Printf("failed to encode evaluation response: %v", err)
+		log.Error("failed to encode evaluation response", zap.Error(err))
 	}
 }

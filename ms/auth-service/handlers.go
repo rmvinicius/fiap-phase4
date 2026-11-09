@@ -4,9 +4,11 @@ import (
 	//"crypto/sha256"
 	//"encoding/hex"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
+
+	"go.opentelemetry.io/contrib/bridges/otelzap"
+	"go.uber.org/zap"
 )
 
 // Estrutura para o corpo da requisição de criação de chave
@@ -23,14 +25,16 @@ type CreateKeyResponse struct {
 
 // healthHandler é um simples endpoint de verificação de saúde
 func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
+	log := otelzap.L(r.Context())
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok"}); err != nil {
-		log.Printf("failed to encode health response: %v", err)
+		log.Error("failed to encode health response", zap.Error(err))
 	}
 }
 
 // validateKeyHandler verifica se uma chave de API (enviada via Header) é válida
 func (a *App) validateKeyHandler(w http.ResponseWriter, r *http.Request) {
+	log := otelzap.L(r.Context())
 	// Extrai a chave do header "Authorization: Bearer <key>"
 	authHeader := r.Header.Get("Authorization")
 	keyString := strings.TrimPrefix(authHeader, "Bearer ")
@@ -48,7 +52,7 @@ func (a *App) validateKeyHandler(w http.ResponseWriter, r *http.Request) {
 	err := a.DB.QueryRow("SELECT id FROM api_keys WHERE key_hash = $1 AND is_active = true", keyHash).Scan(&id)
 	if err != nil {
 		// Se não encontrar (sql.ErrNoRows), ou qualquer outro erro, a chave é inválida
-		log.Printf("Falha na validação da chave (hash: %s...): %v", keyHash[:6], err)
+		log.Warn("Falha na validação da chave", zap.String("key_hash_prefix", keyHash[:6]), zap.Error(err))
 		http.Error(w, "Chave de API inválida ou inativa", http.StatusUnauthorized)
 		return
 	}
@@ -56,12 +60,13 @@ func (a *App) validateKeyHandler(w http.ResponseWriter, r *http.Request) {
 	// Chave válida
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{"message": "Chave válida"}); err != nil {
-		log.Printf("failed to encode validate response: %v", err)
+		log.Error("failed to encode validate response", zap.Error(err))
 	}
 }
 
 // createKeyHandler cria uma nova chave de API
 func (a *App) createKeyHandler(w http.ResponseWriter, r *http.Request) {
+	log := otelzap.L(r.Context())
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 		return
@@ -94,19 +99,19 @@ func (a *App) createKeyHandler(w http.ResponseWriter, r *http.Request) {
 	).Scan(&newID)
 
 	if err != nil {
-		log.Printf("Erro ao salvar a chave no banco: %v", err)
+		log.Error("Erro ao salvar a chave no banco", zap.Error(err))
 		http.Error(w, "Erro ao salvar a chave", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("Nova chave criada com sucesso (ID: %d, Name: %s)", newID, req.Name)
+	log.Info("Nova chave criada com sucesso", zap.Int("id", newID), zap.String("name", req.Name))
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(CreateKeyResponse{
 		Name:    req.Name,
 		Key:     newKey, // Retorna a chave em texto plano pela última vez
 		Message: "Guarde esta chave com segurança! Você não poderá vê-la novamente.",
 	}); err != nil {
-		log.Printf("failed to encode create key response: %v", err)
+		log.Error("failed to encode create key response", zap.Error(err))
 	}
 }
 

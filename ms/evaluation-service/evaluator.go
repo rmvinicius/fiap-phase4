@@ -1,18 +1,19 @@
 package main
 
 import (
-	//"context"
+	"context"
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 const (
@@ -42,14 +43,14 @@ func (a *App) getCombinedFlagInfo(flagName string) (*CombinedFlagInfo, error) {
 		// Cache HIT
 		var info CombinedFlagInfo
 		if err := json.Unmarshal([]byte(val), &info); err == nil {
-			log.Printf("Cache HIT para flag '%s'", flagName)
+			logger.Info("Cache HIT para flag", zap.String("flag_name", flagName))
 			return &info, nil
 		}
 		// Se o unmarshal falhar, trata como cache miss
-		log.Printf("Erro ao desserializar cache para flag '%s': %v", flagName, err)
+		logger.Warn("Erro ao desserializar cache para flag", zap.String("flag_name", flagName), zap.Error(err))
 	}
 	
-	log.Printf("Cache MISS para flag '%s'", flagName)
+	logger.Info("Cache MISS para flag", zap.String("flag_name", flagName))
 	// 2. Cache MISS - Buscar dos serviços
 	info, err := a.fetchFromServices(flagName)
 	if err != nil {
@@ -60,7 +61,7 @@ func (a *App) getCombinedFlagInfo(flagName string) (*CombinedFlagInfo, error) {
 	jsonData, err := json.Marshal(info)
 	if err == nil {
 		if err := a.RedisClient.Set(ctx, cacheKey, jsonData, CACHE_TTL).Err(); err != nil {
-			log.Printf("Erro ao salvar cache para flag '%s': %v", flagName, err)
+			logger.Warn("Erro ao salvar cache para flag", zap.String("flag_name", flagName), zap.Error(err))
 		}
 	}
 
@@ -94,7 +95,7 @@ func (a *App) fetchFromServices(flagName string) (*CombinedFlagInfo, error) {
 		return nil, flagErr
 	}
 	if ruleErr != nil {
-		log.Printf("Aviso: Nenhuma regra de segmentação encontrada para '%s'. Usando padrão.", flagName)
+		logger.Warn("Aviso: Nenhuma regra de segmentação encontrada", zap.String("flag_name", flagName))
 	}
 
 	return &CombinedFlagInfo{
@@ -121,7 +122,7 @@ func (a *App) fetchFlag(flagName string) (*Flag, error) {
 	}
 	apiKey := os.Getenv("SERVICE_API_KEY")
 	if apiKey == "" {
-		log.Fatal("SERVICE_API_KEY deve ser definida")
+		logger.Fatal("SERVICE_API_KEY deve ser definida")
 	}
 
 	sanitizedURL := &url.URL{
@@ -223,7 +224,7 @@ func (a *App) runEvaluationLogic(info *CombinedFlagInfo, userID string) bool {
 		// Converte o 'value' (que é interface{}) para float64
 		percentage, ok := rule.Value.(float64)
 		if !ok {
-			log.Printf("Erro: valor da regra de porcentagem não é um número para a flag '%s'", info.Flag.Name)
+			logger.Error("Erro: valor da regra de porcentagem não é um número", zap.String("flag_name", info.Flag.Name))
 			return false
 		}
 		

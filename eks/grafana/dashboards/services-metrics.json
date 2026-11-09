@@ -1,0 +1,281 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    { "title": "Cluster Metrics", "type": "dashboards", "url": "db/fiap4-cluster-metrics", "targetBlank": true },
+    { "title": "HTTP Metrics", "type": "dashboards", "url": "db/fiap4-http-metrics-v2", "targetBlank": true }
+  ],
+  "panels": [
+    {
+      "datasource": null,
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "id": 0,
+      "options": {
+        "content": "## FIAP Phase 4 - Services Metrics (Pod/Container)\n\nPer-service **CPU**, **Memory**, and **Network** usage.\n\nFilter by **namespace**, **service**, and **pod**.\n\n### Data sources\n- **Requests/Limits**: `kube_pod_container_resource_*` (kube-state-metrics)\n- **Actual usage**: `container_cpu_usage_seconds_total` / `container_memory_working_set_bytes` (requires kubelet/cAdvisor scrape — see notes below)\n- **Network**: `container_network_receive_bytes_total` / `container_network_transmit_bytes_total` (requires kubelet/cAdvisor scrape)",
+        "mode": "markdown"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 4 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["last"], "fields": "" }, "showTime": true },
+      "targets": [
+        { "expr": "sum by (service) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m])) / sum by (service) (kube_pod_container_resource_requests{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU % of requests", "refId": "A" }
+      ],
+      "title": "CPU % of requests",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 4 },
+      "id": 2,
+      "options": { "reduceOptions": { "calcs": ["last"], "fields": "" }, "showTime": true },
+      "targets": [
+        { "expr": "sum by (service) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m])) / sum by (service) (kube_pod_container_resource_limits{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU % of limits", "refId": "A" }
+      ],
+      "title": "CPU % of limits",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 4 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["last"], "fields": "" }, "showTime": true },
+      "targets": [
+        { "expr": "sum by (service) (container_memory_working_set_bytes{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}) / sum by (service) (kube_pod_container_resource_requests{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem % of requests", "refId": "A" }
+      ],
+      "title": "Memory % of requests",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 4 },
+      "id": 4,
+      "options": { "reduceOptions": { "calcs": ["last"], "fields": "" }, "showTime": true },
+      "targets": [
+        { "expr": "sum by (service) (container_memory_working_set_bytes{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}) / sum by (service) (kube_pod_container_resource_limits{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem % of limits", "refId": "A" }
+      ],
+      "title": "Memory % of limits",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ {"color": "green", "value": null}, {"color": "yellow", "value": 0.8}, {"color": "red", "value": 0.95} ] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 5,
+      "targets": [
+        { "expr": "sum by (service) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "CPU used {{service}}", "refId": "A" },
+        { "expr": "sum by (service) (kube_pod_container_resource_requests{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU requests {{service}}", "refId": "B" },
+        { "expr": "sum by (service) (kube_pod_container_resource_limits{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU limits {{service}}", "refId": "C" }
+      ],
+      "title": "CPU: usage vs requests vs limits",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "binBps", "thresholds": { "mode": "absolute", "steps": [ {"color": "green"}, {"color": "yellow", "value": 1048576}, {"color": "red", "value": 10485760} ] } },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 6,
+      "targets": [
+        { "expr": "sum by (service) (rate(container_memory_working_set_bytes{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Mem used {{service}}", "refId": "A" },
+        { "expr": "sum by (service) (kube_pod_container_resource_requests{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem requests {{service}}", "refId": "B" },
+        { "expr": "sum by (service) (kube_pod_container_resource_limits{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem limits {{service}}", "refId": "C" }
+      ],
+      "title": "Memory: usage vs requests vs limits",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "binBps", "overrides": [] },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 7,
+      "targets": [
+        { "expr": "sum by (service) (rate(container_network_receive_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Net RX {{service}}", "refId": "A" },
+        { "expr": "sum by (service) (rate(container_network_transmit_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Net TX {{service}}", "refId": "B" }
+      ],
+      "title": "Network: RX/TX by service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "binBps", "overrides": [] },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 8,
+      "targets": [
+        { "expr": "sum by (service) (rate(container_network_receive_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Net RX {{service}}", "refId": "A" },
+        { "expr": "sum by (service) (rate(container_network_transmit_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Net TX {{service}}", "refId": "B" }
+      ],
+      "title": "Network: cumulative RX/TX by service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "binBps", "overrides": [] },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "id": 9,
+      "targets": [
+        { "expr": "sum by (pod, container) (rate(container_network_receive_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "{{pod}}/{{container}} RX", "refId": "A" },
+        { "expr": "sum by (pod, container) (rate(container_network_transmit_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "{{pod}}/{{container}} TX", "refId": "B" }
+      ],
+      "title": "Network: per pod/container",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "binBps", "overrides": [] },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "id": 10,
+      "targets": [
+        { "expr": "sum by (service, container) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "{{service}}/{{container}} CPU", "refId": "A" },
+        { "expr": "sum by (service, container) (container_memory_working_set_bytes{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"})", "legendFormat": "{{service}}/{{container}} Mem", "refId": "B" }
+      ],
+      "title": "Usage by service/container",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "binBps", "overrides": [] },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "id": 11,
+      "targets": [
+        { "expr": "sum by (service) (kube_pod_container_resource_requests{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU requests {{service}}", "refId": "A" },
+        { "expr": "sum by (service) (kube_pod_container_resource_requests{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem requests {{service}}", "refId": "B" }
+      ],
+      "title": "Resource requests by service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "binBps", "overrides": [] },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "id": 12,
+      "targets": [
+        { "expr": "sum by (service) (kube_pod_container_resource_limits{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU limits {{service}}", "refId": "A" },
+        { "expr": "sum by (service) (kube_pod_container_resource_limits{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem limits {{service}}", "refId": "B" }
+      ],
+      "title": "Resource limits by service",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["fiap-phase4", "services", "cpu", "memory", "network", "prometheus"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": { "selected": true, "text": "application", "value": "application" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values(kube_pod_container_resource_requests, namespace)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Namespace",
+        "name": "namespace",
+        "query": { "query": "label_values(kube_pod_container_resource_requests, namespace)", "refId": "ns" },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\"}, service)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "label": "Service",
+        "name": "service",
+        "query": { "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\"}, service)", "refId": "svc" },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", service=~\"$service\"}, pod)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "label": "Pod",
+        "name": "pod",
+        "query": { "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", service=~\"$service\"}, pod)", "refId": "pod" },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}, container)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "label": "Container",
+        "name": "container",
+        "query": { "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}, container)", "refId": "c" },
+        "refresh": 2,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-30m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "FIAP Phase 4 - Services Metrics (CPU / Memory / Network)",
+  "uid": "fiap4-services-metrics",
+  "version": 1
+}

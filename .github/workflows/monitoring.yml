@@ -129,6 +129,7 @@ jobs:
         working-directory: eks/grafana
         run: |
           kubectl apply -f secrets.yaml
+          kubectl apply -f dashboards.yaml
           helm upgrade --install grafana --version 14.4.0 grafana-community/grafana --namespace ${{ env.NAMESPACE }} --create-namespace --values values.yaml
 
   install-prometheus:

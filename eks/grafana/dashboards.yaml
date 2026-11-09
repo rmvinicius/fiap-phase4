@@ -1,0 +1,1507 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-microservices-http
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "FIAP Phase 4"
+data:
+  microservices-http-metrics.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "datasource": null,
+          "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+          "id": 0,
+          "options": {
+            "content": "## FIAP Phase 4 - HTTP Metrics (Go + Flask)\n\nFilter by **namespace**, **service**, and **pod** using the dropdowns above.\n\n### Services\n- **Go**: auth-service, evaluation-service → metrics: `http_requests_total`, `http_request_duration_seconds_*`\n- **Flask**: flag-service, targeting-service, analytics-service → metrics: `flask_http_request_total`, `flask_http_request_duration_seconds_*`\n\n### Notes\n- Go services use `path` label; Flask services use `endpoint` label for routes\n- 5xx Error Rate > 5% triggers alert (see Alerting tab)",
+            "mode": "markdown"
+          },
+          "title": "",
+          "type": "text"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "thresholds": { "mode": "absolute", "steps": [ {"color": "green"}, {"color": "yellow", "value": 1}, {"color": "red", "value": 10} ] }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 4 },
+          "id": 1,
+          "options": {
+            "reduceOptions": { "calcs": ["last"], "fields": "" },
+            "showTime": true
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])) + sum(rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+              "legendFormat": "Total RPS",
+              "refId": "A"
+            }
+          ],
+          "title": "Total Request Rate (RPS)",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": { "mode": "absolute", "steps": [ {"color": "green", "value": 0.1}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 1} ] }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 4 },
+          "id": 2,
+          "options": {
+            "reduceOptions": { "calcs": ["last"], "fields": "" },
+            "showTime": true
+          },
+          "targets": [
+            {
+              "expr": "(sum(rate(http_request_duration_seconds_sum{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])) + sum(rate(flask_http_request_duration_seconds_sum{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))) / (sum(rate(http_request_duration_seconds_count{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])) + sum(rate(flask_http_request_duration_seconds_count{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+              "legendFormat": "Avg Response Time",
+              "refId": "A"
+            }
+          ],
+          "title": "Avg Response Time",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": { "mode": "absolute", "steps": [ {"color": "green", "value": null}, {"color": "yellow", "value": 0.01}, {"color": "red", "value": 0.05} ] }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 4 },
+          "id": 3,
+          "options": {
+            "reduceOptions": { "calcs": ["last"], "fields": "" },
+            "showTime": true
+          },
+          "targets": [
+            {
+              "expr": "(sum(rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m])) + sum(rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))) / clamp_min((sum(rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])) + sum(rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))), 1e-9)",
+              "legendFormat": "5xx Error Rate",
+              "refId": "A"
+            }
+          ],
+          "title": "5xx Error Rate",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "thresholds": { "mode": "absolute", "steps": [ {"color": "green"}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5} ] }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 4 },
+          "id": 4,
+          "options": {
+            "reduceOptions": { "calcs": ["last"], "fields": "" },
+            "showTime": true
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m])) + sum(rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+              "legendFormat": "5xx Count",
+              "refId": "A"
+            }
+          ],
+          "title": "5xx Count (5m)",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "id": 5,
+          "targets": [
+            {
+              "expr": "sum by (method) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+              "legendFormat": "{{method}} (go)",
+              "refId": "A"
+            },
+            {
+              "expr": "sum by (method) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+              "legendFormat": "{{method}} (flask)",
+              "refId": "B"
+            }
+          ],
+          "title": "Request Rate by HTTP Method",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "id": 6,
+          "targets": [
+            {
+              "expr": "sum by (service, path) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+              "legendFormat": "{{service}} {{path}}",
+              "refId": "A"
+            },
+            {
+              "expr": "sum by (service, endpoint) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+              "legendFormat": "{{service}} {{endpoint}}",
+              "refId": "B"
+            }
+          ],
+          "title": "Request Rate by Path/Route",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "s" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "id": 7,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+              "legendFormat": "p95 {{service}} (go)",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum by (le, service) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+              "legendFormat": "p95 {{service}} (flask)",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.50, sum by (le, service) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+              "legendFormat": "p50 {{service}} (go)",
+              "refId": "C"
+            },
+            {
+              "expr": "histogram_quantile(0.50, sum by (le, service) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+              "legendFormat": "p50 {{service}} (flask)",
+              "refId": "D"
+            }
+          ],
+          "title": "Latency by Service (p50/p95)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "s" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "id": 8,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum by (le, path) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+              "legendFormat": "{{path}} (go)",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum by (le, endpoint) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+              "legendFormat": "{{endpoint}} (flask)",
+              "refId": "B"
+            }
+          ],
+          "title": "p95 Latency by Path/Route",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "id": 9,
+          "targets": [
+            {
+              "expr": "sum by (service, status) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"2..\"}[5m]))",
+              "legendFormat": "{{service}} 2xx (go)",
+              "refId": "A"
+            },
+            {
+              "expr": "sum by (service, status) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"4..\"}[5m]))",
+              "legendFormat": "{{service}} 4xx (go)",
+              "refId": "B"
+            },
+            {
+              "expr": "sum by (service, status) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+              "legendFormat": "{{service}} 5xx (go)",
+              "refId": "C"
+            },
+            {
+              "expr": "sum by (service, status) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"2..\"}[5m]))",
+              "legendFormat": "{{service}} 2xx (flask)",
+              "refId": "D"
+            },
+            {
+              "expr": "sum by (service, status) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"4..\"}[5m]))",
+              "legendFormat": "{{service}} 4xx (flask)",
+              "refId": "E"
+            },
+            {
+              "expr": "sum by (service, status) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+              "legendFormat": "{{service}} 5xx (flask)",
+              "refId": "F"
+            }
+          ],
+          "title": "Request Rate by Status Code (2xx/4xx/5xx)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": { "mode": "absolute", "steps": [ {"color": "green", "value": null}, {"color": "yellow", "value": 0.01}, {"color": "red", "value": 0.05} ] }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "id": 10,
+          "targets": [
+            {
+              "expr": "sum by (service) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m])) / clamp_min(sum by (service) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])), 1e-9)",
+              "legendFormat": "{{service}} (go)",
+              "refId": "A"
+            },
+            {
+              "expr": "sum by (service) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m])) / clamp_min(sum by (service) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])), 1e-9)",
+              "legendFormat": "{{service}} (flask)",
+              "refId": "B"
+            }
+          ],
+          "title": "5xx Error Rate by Service",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+          "id": 11,
+          "targets": [
+            {
+              "expr": "sum by (service, path, status) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+              "legendFormat": "{{service}} {{path}} {{status}}",
+              "refId": "A"
+            },
+            {
+              "expr": "sum by (service, endpoint, status) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+              "legendFormat": "{{service}} {{endpoint}} {{status}}",
+              "refId": "B"
+            }
+          ],
+          "title": "5xx Errors by Path/Route",
+          "type": "table"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+          "id": 12,
+          "targets": [
+            {
+              "expr": "sum by (service, path) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            },
+            {
+              "expr": "sum by (service, endpoint) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+              "format": "table",
+              "instant": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Top Paths by Volume",
+          "type": "table"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["fiap-phase4", "microservices", "http", "prometheus"],
+      "templating": {
+        "list": [
+          {
+            "current": {},
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "name": "DS_PROMETHEUS",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "type": "datasource"
+          },
+          {
+            "current": { "selected": true, "text": "application", "value": "application" },
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "definition": "label_values({__name__=~\"http_requests_total|flask_http_request_total\"}, namespace)",
+            "hide": 0,
+            "includeAll": true,
+            "label": "Namespace",
+            "name": "namespace",
+            "query": { "query": "label_values({__name__=~\"http_requests_total|flask_http_request_total\"}, namespace)", "refId": "ns" },
+            "refresh": 2,
+            "type": "query"
+          },
+          {
+            "current": { "selected": true, "text": "All", "value": "$__all" },
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "definition": "label_values({__name__=~\"http_requests_total|flask_http_request_total\", namespace=~\"$namespace\"}, service)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "label": "Service",
+            "name": "service",
+            "query": { "query": "label_values({__name__=~\"http_requests_total|flask_http_request_total\", namespace=~\"$namespace\"}, service)", "refId": "svc" },
+            "refresh": 2,
+            "type": "query"
+          },
+          {
+            "current": { "selected": true, "text": "All", "value": "$__all" },
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "definition": "label_values({__name__=~\"http_requests_total|flask_http_request_total\", namespace=~\"$namespace\", service=~\"$service\"}, pod)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "label": "Pod",
+            "name": "pod",
+            "query": { "query": "label_values({__name__=~\"http_requests_total|flask_http_request_total\", namespace=~\"$namespace\", service=~\"$service\"}, pod)", "refId": "pod" },
+            "refresh": 2,
+            "type": "query"
+          }
+        ]
+      },
+      "time": { "from": "now-30m", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "FIAP Phase 4 - HTTP Metrics (Go + Flask)",
+      "uid": "fiap4-http-metrics-v2",
+      "version": 1
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-cluster-metrics
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "FIAP Phase 4"
+data:
+  cluster-metrics.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "id": 1,
+          "targets": [
+            { "expr": "sum by (node) (node_cpu_seconds_total{mode=\"system\"}) / sum by (node) (node_cpu_seconds_total{mode=\"total\"})", "legendFormat": "System CPU {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_cpu_seconds_total{mode=\"user\"}) / sum by (node) (node_cpu_seconds_total{mode=\"total\"})", "legendFormat": "User CPU {{node}}", "refId": "B" }
+          ],
+          "title": "CPU usage by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "id": 2,
+          "targets": [
+            { "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))", "legendFormat": "Memory used {{node}}", "refId": "A" }
+          ],
+          "title": "Memory usage by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "id": 3,
+          "targets": [
+            { "expr": "node_filesystem_avail_bytes / node_filesystem_size_bytes", "legendFormat": "Free {{device}} on {{node}}", "refId": "A" }
+          ],
+          "title": "Filesystem free space by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "id": 4,
+          "targets": [
+            { "expr": "node_disk_writes_completed_total / node_disk_writes_completed_total", "legendFormat": "Disk I/O {{device}} on {{node}}", "refId": "A" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "id": 5,
+          "targets": [
+            { "expr": "sum by (instance) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (instance) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{instance}}", "refId": "A" },
+            { "expr": "sum by (instance) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (instance) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{instance}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "id": 6,
+          "targets": [
+            { "expr": "sum by (instance) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (instance) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{instance}}", "refId": "A" },
+            { "expr": "sum by (instance) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (instance) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{instance}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "id": 7,
+          "targets": [
+            { "expr": "sum by (node) (node_memory_MemAvailable_bytes) / sum by (node) (node_memory_MemTotal_bytes)", "legendFormat": "Available {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_memory_Cached_bytes) / sum by (node) (node_memory_MemTotal_bytes)", "legendFormat": "Cached {{node}}", "refId": "B" }
+          ],
+          "title": "Memory available vs cached by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "id": 8,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+          "id": 9,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+          "id": 10,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+          "id": 11,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+          "id": 12,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
+          "id": 13,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 48 },
+          "id": 14,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 56 },
+          "id": 15,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 56 },
+          "id": 16,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 64 },
+          "id": 17,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 64 },
+          "id": 18,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 72 },
+          "id": 19,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 72 },
+          "id": 20,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 80 },
+          "id": 21,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 80 },
+          "id": 22,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 88 },
+          "id": 23,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 88 },
+          "id": 24,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 96 },
+          "id": 25,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 96 },
+          "id": 26,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 104 },
+          "id": 27,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 104 },
+          "id": 28,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 112 },
+          "id": 29,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 112 },
+          "id": 30,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 120 },
+          "id": 31,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 120 },
+          "id": 32,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 128 },
+          "id": 33,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 128 },
+          "id": 34,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 136 },
+          "id": 35,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 136 },
+          "id": 36,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 144 },
+          "id": 37,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 144 },
+          "id": 38,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 152 },
+          "id": 39,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 152 },
+          "id": 40,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 160 },
+          "id": 41,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 160 },
+          "id": 42,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 168 },
+          "id": 43,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 168 },
+          "id": 44,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 176 },
+          "id": 45,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 176 },
+          "id": 46,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 184 },
+          "id": 47,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"cpu\"}) / sum by (node) (node_allocatable{resource=\"cpu\"})", "legendFormat": "CPU limits {{node}}", "refId": "B" }
+          ],
+          "title": "CPU requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 184 },
+          "id": 48,
+          "targets": [
+            { "expr": "sum by (node) (kube_pod_container_resource_requests{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem requests {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (kube_pod_container_resource_limits{resource=\"memory\"}) / sum by (node) (node_allocatable{resource=\"memory\"})", "legendFormat": "Mem limits {{node}}", "refId": "B" }
+          ],
+          "title": "Memory requests/limits by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 192 },
+          "id": 49,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_read_bytes_total) / sum by (node) (node_disk_read_bytes_total)", "legendFormat": "Disk reads {{node}}", "refId": "A" },
+            { "expr": "sum by (node) (node_disk_write_bytes_total) / sum by (node) (node_disk_write_bytes_total)", "legendFormat": "Disk writes {{node}}", "refId": "B" }
+          ],
+          "title": "Disk I/O by node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 } ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 192 },
+          "id": 50,
+          "targets": [
+            { "expr": "sum by (node) (node_disk_writes_completed_total) / sum by (node) (node_disk_writes_completed_total)", "legendFormat": "Disk writes {{node}}", "refId": "A" }
+          ],
+          "title": "Disk writes by node",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["fiap-phase4", "cluster", "nodepool", "resources", "prometheus"],
+      "templating": {
+        "list": [
+          {
+            "current": {},
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "name": "DS_PROMETHEUS",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "type": "datasource"
+          },
+          {
+            "current": { "selected": true, "text": "All", "value": "$__all" },
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "definition": "label_values(node_cpu_seconds_total, instance)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "label": "Node",
+            "name": "node",
+            "query": { "query": "label_values(node_cpu_seconds_total, instance)", "refId": "node" },
+            "refresh": 2,
+            "type": "query"
+          }
+        ]
+      },
+      "time": { "from": "now-30m", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "FIAP Phase 4 - Cluster Metrics (Nodepool & Resources)",
+      "uid": "fiap4-cluster-metrics",
+      "version": 1
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-services-metrics
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "FIAP Phase 4"
+data:
+  services-metrics.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [
+        { "title": "Cluster Metrics", "type": "dashboards", "url": "db/fiap4-cluster-metrics", "targetBlank": true },
+        { "title": "HTTP Metrics", "type": "dashboards", "url": "db/fiap4-http-metrics-v2", "targetBlank": true }
+      ],
+      "panels": [
+        {
+          "datasource": null,
+          "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+          "id": 0,
+          "options": {
+            "content": "## FIAP Phase 4 - Services Metrics (Pod/Container)\n\nPer-service **CPU**, **Memory**, and **Network** usage.\n\nFilter by **namespace**, **service**, and **pod**.\n\n### Data sources\n- **Requests/Limits**: `kube_pod_container_resource_*` (kube-state-metrics)\n- **Actual usage**: `container_cpu_usage_seconds_total` / `container_memory_working_set_bytes` (requires kubelet/cAdvisor scrape — see notes below)\n- **Network**: `container_network_receive_bytes_total` / `container_network_transmit_bytes_total` (requires kubelet/cAdvisor scrape)",
+            "mode": "markdown"
+          },
+          "title": "",
+          "type": "text"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 4 },
+          "id": 1,
+          "options": { "reduceOptions": { "calcs": ["last"], "fields": "" }, "showTime": true },
+          "targets": [
+            { "expr": "sum by (service) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m])) / sum by (service) (kube_pod_container_resource_requests{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU % of requests", "refId": "A" }
+          ],
+          "title": "CPU % of requests",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 4 },
+          "id": 2,
+          "options": { "reduceOptions": { "calcs": ["last"], "fields": "" }, "showTime": true },
+          "targets": [
+            { "expr": "sum by (service) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m])) / sum by (service) (kube_pod_container_resource_limits{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU % of limits", "refId": "A" }
+          ],
+          "title": "CPU % of limits",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 4 },
+          "id": 3,
+          "options": { "reduceOptions": { "calcs": ["last"], "fields": "" }, "showTime": true },
+          "targets": [
+            { "expr": "sum by (service) (container_memory_working_set_bytes{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}) / sum by (service) (kube_pod_container_resource_requests{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem % of requests", "refId": "A" }
+          ],
+          "title": "Memory % of requests",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 4 },
+          "id": 4,
+          "options": { "reduceOptions": { "calcs": ["last"], "fields": "" }, "showTime": true },
+          "targets": [
+            { "expr": "sum by (service) (container_memory_working_set_bytes{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}) / sum by (service) (kube_pod_container_resource_limits{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem % of limits", "refId": "A" }
+          ],
+          "title": "Memory % of limits",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ {"color": "green", "value": null}, {"color": "yellow", "value": 0.8}, {"color": "red", "value": 0.95} ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "id": 5,
+          "targets": [
+            { "expr": "sum by (service) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "CPU used {{service}}", "refId": "A" },
+            { "expr": "sum by (service) (kube_pod_container_resource_requests{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU requests {{service}}", "refId": "B" },
+            { "expr": "sum by (service) (kube_pod_container_resource_limits{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU limits {{service}}", "refId": "C" }
+          ],
+          "title": "CPU: usage vs requests vs limits",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "binBps", "thresholds": { "mode": "absolute", "steps": [ {"color": "green"}, {"color": "yellow", "value": 1048576}, {"color": "red", "value": 10485760} ] } },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "id": 6,
+          "targets": [
+            { "expr": "sum by (service) (rate(container_memory_working_set_bytes{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Mem used {{service}}", "refId": "A" },
+            { "expr": "sum by (service) (kube_pod_container_resource_requests{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem requests {{service}}", "refId": "B" },
+            { "expr": "sum by (service) (kube_pod_container_resource_limits{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem limits {{service}}", "refId": "C" }
+          ],
+          "title": "Memory: usage vs requests vs limits",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "binBps", "overrides": [] },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "id": 7,
+          "targets": [
+            { "expr": "sum by (service) (rate(container_network_receive_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Net RX {{service}}", "refId": "A" },
+            { "expr": "sum by (service) (rate(container_network_transmit_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Net TX {{service}}", "refId": "B" }
+          ],
+          "title": "Network: RX/TX by service",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "binBps", "overrides": [] },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "id": 8,
+          "targets": [
+            { "expr": "sum by (service) (rate(container_network_receive_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Net RX {{service}}", "refId": "A" },
+            { "expr": "sum by (service) (rate(container_network_transmit_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "Net TX {{service}}", "refId": "B" }
+          ],
+          "title": "Network: cumulative RX/TX by service",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "binBps", "overrides": [] },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "id": 9,
+          "targets": [
+            { "expr": "sum by (pod, container) (rate(container_network_receive_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "{{pod}}/{{container}} RX", "refId": "A" },
+            { "expr": "sum by (pod, container) (rate(container_network_transmit_bytes_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "{{pod}}/{{container}} TX", "refId": "B" }
+          ],
+          "title": "Network: per pod/container",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "binBps", "overrides": [] },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "id": 10,
+          "targets": [
+            { "expr": "sum by (service, container) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"}[5m]))", "legendFormat": "{{service}}/{{container}} CPU", "refId": "A" },
+            { "expr": "sum by (service, container) (container_memory_working_set_bytes{namespace=~\"$namespace\", container=~\"$container\", pod=~\"$pod\"})", "legendFormat": "{{service}}/{{container}} Mem", "refId": "B" }
+          ],
+          "title": "Usage by service/container",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "binBps", "overrides": [] },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+          "id": 11,
+          "targets": [
+            { "expr": "sum by (service) (kube_pod_container_resource_requests{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU requests {{service}}", "refId": "A" },
+            { "expr": "sum by (service) (kube_pod_container_resource_requests{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem requests {{service}}", "refId": "B" }
+          ],
+          "title": "Resource requests by service",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "fieldConfig": {
+            "defaults": { "unit": "binBps", "overrides": [] },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+          "id": 12,
+          "targets": [
+            { "expr": "sum by (service) (kube_pod_container_resource_limits{resource=\"cpu\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "CPU limits {{service}}", "refId": "A" },
+            { "expr": "sum by (service) (kube_pod_container_resource_limits{resource=\"memory\", namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"})", "legendFormat": "Mem limits {{service}}", "refId": "B" }
+          ],
+          "title": "Resource limits by service",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["fiap-phase4", "services", "cpu", "memory", "network", "prometheus"],
+      "templating": {
+        "list": [
+          {
+            "current": {},
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "name": "DS_PROMETHEUS",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "type": "datasource"
+          },
+          {
+            "current": { "selected": true, "text": "application", "value": "application" },
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "definition": "label_values(kube_pod_container_resource_requests, namespace)",
+            "hide": 0,
+            "includeAll": true,
+            "label": "Namespace",
+            "name": "namespace",
+            "query": { "query": "label_values(kube_pod_container_resource_requests, namespace)", "refId": "ns" },
+            "refresh": 2,
+            "type": "query"
+          },
+          {
+            "current": { "selected": true, "text": "All", "value": "$__all" },
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "definition": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\"}, service)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "label": "Service",
+            "name": "service",
+            "query": { "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\"}, service)", "refId": "svc" },
+            "refresh": 2,
+            "type": "query"
+          },
+          {
+            "current": { "selected": true, "text": "All", "value": "$__all" },
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "definition": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", service=~\"$service\"}, pod)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "label": "Pod",
+            "name": "pod",
+            "query": { "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", service=~\"$service\"}, pod)", "refId": "pod" },
+            "refresh": 2,
+            "type": "query"
+          },
+          {
+            "current": { "selected": true, "text": "All", "value": "$__all" },
+            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "definition": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}, container)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "label": "Container",
+            "name": "container",
+            "query": { "query": "label_values(kube_pod_container_resource_requests{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}, container)", "refId": "c" },
+            "refresh": 2,
+            "type": "query"
+          }
+        ]
+      },
+      "time": { "from": "now-30m", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "FIAP Phase 4 - Services Metrics (CPU / Memory / Network)",
+      "uid": "fiap4-services-metrics",
+      "version": 1
+    }

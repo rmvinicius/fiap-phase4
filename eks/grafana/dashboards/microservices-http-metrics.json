@@ -1,0 +1,406 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": null,
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "id": 0,
+      "options": {
+        "content": "## FIAP Phase 4 - HTTP Metrics (Go + Flask)\n\nFilter by **namespace**, **service**, and **pod** using the dropdowns above.\n\n### Services\n- **Go**: auth-service, evaluation-service → metrics: `http_requests_total`, `http_request_duration_seconds_*`\n- **Flask**: flag-service, targeting-service, analytics-service → metrics: `flask_http_request_total`, `flask_http_request_duration_seconds_*`\n\n### Notes\n- Go services use `path` label; Flask services use `endpoint` label for routes\n- 5xx Error Rate > 5% triggers alert (see Alerting tab)",
+        "mode": "markdown"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [ {"color": "green"}, {"color": "yellow", "value": 1}, {"color": "red", "value": 10} ] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 4 },
+      "id": 1,
+      "options": {
+        "reduceOptions": { "calcs": ["last"], "fields": "" },
+        "showTime": true
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])) + sum(rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+          "legendFormat": "Total RPS",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Request Rate (RPS)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [ {"color": "green", "value": 0.1}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 1} ] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 4 },
+      "id": 2,
+      "options": {
+        "reduceOptions": { "calcs": ["last"], "fields": "" },
+        "showTime": true
+      },
+      "targets": [
+        {
+          "expr": "(sum(rate(http_request_duration_seconds_sum{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])) + sum(rate(flask_http_request_duration_seconds_sum{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))) / (sum(rate(http_request_duration_seconds_count{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])) + sum(rate(flask_http_request_duration_seconds_count{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+          "legendFormat": "Avg Response Time",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Response Time",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [ {"color": "green", "value": null}, {"color": "yellow", "value": 0.01}, {"color": "red", "value": 0.05} ] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 4 },
+      "id": 3,
+      "options": {
+        "reduceOptions": { "calcs": ["last"], "fields": "" },
+        "showTime": true
+      },
+      "targets": [
+        {
+          "expr": "(sum(rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m])) + sum(rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))) / clamp_min((sum(rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])) + sum(rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))), 1e-9)",
+          "legendFormat": "5xx Error Rate",
+          "refId": "A"
+        }
+      ],
+      "title": "5xx Error Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "thresholds": { "mode": "absolute", "steps": [ {"color": "green"}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5} ] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 4 },
+      "id": 4,
+      "options": {
+        "reduceOptions": { "calcs": ["last"], "fields": "" },
+        "showTime": true
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m])) + sum(rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+          "legendFormat": "5xx Count",
+          "refId": "A"
+        }
+      ],
+      "title": "5xx Count (5m)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum by (method) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+          "legendFormat": "{{method}} (go)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (method) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+          "legendFormat": "{{method}} (flask)",
+          "refId": "B"
+        }
+      ],
+      "title": "Request Rate by HTTP Method",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "sum by (service, path) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+          "legendFormat": "{{service}} {{path}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (service, endpoint) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+          "legendFormat": "{{service}} {{endpoint}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Request Rate by Path/Route",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "s" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+          "legendFormat": "p95 {{service}} (go)",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, service) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+          "legendFormat": "p95 {{service}} (flask)",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, service) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+          "legendFormat": "p50 {{service}} (go)",
+          "refId": "C"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, service) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+          "legendFormat": "p50 {{service}} (flask)",
+          "refId": "D"
+        }
+      ],
+      "title": "Latency by Service (p50/p95)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "s" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, path) (rate(http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+          "legendFormat": "{{path}} (go)",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, endpoint) (rate(flask_http_request_duration_seconds_bucket{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])))",
+          "legendFormat": "{{endpoint}} (flask)",
+          "refId": "B"
+        }
+      ],
+      "title": "p95 Latency by Path/Route",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "sum by (service, status) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"2..\"}[5m]))",
+          "legendFormat": "{{service}} 2xx (go)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (service, status) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"4..\"}[5m]))",
+          "legendFormat": "{{service}} 4xx (go)",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (service, status) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+          "legendFormat": "{{service}} 5xx (go)",
+          "refId": "C"
+        },
+        {
+          "expr": "sum by (service, status) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"2..\"}[5m]))",
+          "legendFormat": "{{service}} 2xx (flask)",
+          "refId": "D"
+        },
+        {
+          "expr": "sum by (service, status) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"4..\"}[5m]))",
+          "legendFormat": "{{service}} 4xx (flask)",
+          "refId": "E"
+        },
+        {
+          "expr": "sum by (service, status) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+          "legendFormat": "{{service}} 5xx (flask)",
+          "refId": "F"
+        }
+      ],
+      "title": "Request Rate by Status Code (2xx/4xx/5xx)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [ {"color": "green", "value": null}, {"color": "yellow", "value": 0.01}, {"color": "red", "value": 0.05} ] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "sum by (service) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m])) / clamp_min(sum by (service) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])), 1e-9)",
+          "legendFormat": "{{service}} (go)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (service) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m])) / clamp_min(sum by (service) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m])), 1e-9)",
+          "legendFormat": "{{service}} (flask)",
+          "refId": "B"
+        }
+      ],
+      "title": "5xx Error Rate by Service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "sum by (service, path, status) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+          "legendFormat": "{{service}} {{path}} {{status}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (service, endpoint, status) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\", status=~\"5..\"}[5m]))",
+          "legendFormat": "{{service}} {{endpoint}} {{status}}",
+          "refId": "B"
+        }
+      ],
+      "title": "5xx Errors by Path/Route",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "id": 12,
+      "targets": [
+        {
+          "expr": "sum by (service, path) (rate(http_requests_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (service, endpoint) (rate(flask_http_request_total{namespace=~\"$namespace\", service=~\"$service\", pod=~\"$pod\"}[5m]))",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Top Paths by Volume",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["fiap-phase4", "microservices", "http", "prometheus"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": { "selected": true, "text": "application", "value": "application" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values({__name__=~\"http_requests_total|flask_http_request_total\"}, namespace)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Namespace",
+        "name": "namespace",
+        "query": { "query": "label_values({__name__=~\"http_requests_total|flask_http_request_total\"}, namespace)", "refId": "ns" },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values({__name__=~\"http_requests_total|flask_http_request_total\", namespace=~\"$namespace\"}, service)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "label": "Service",
+        "name": "service",
+        "query": { "query": "label_values({__name__=~\"http_requests_total|flask_http_request_total\", namespace=~\"$namespace\"}, service)", "refId": "svc" },
+        "refresh": 2,
+        "type": "query"
+      },
+      {
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values({__name__=~\"http_requests_total|flask_http_request_total\", namespace=~\"$namespace\", service=~\"$service\"}, pod)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "label": "Pod",
+        "name": "pod",
+        "query": { "query": "label_values({__name__=~\"http_requests_total|flask_http_request_total\", namespace=~\"$namespace\", service=~\"$service\"}, pod)", "refId": "pod" },
+        "refresh": 2,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-30m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "FIAP Phase 4 - HTTP Metrics (Go + Flask)",
+  "uid": "fiap4-http-metrics-v2",
+  "version": 1
+}
