@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"go.opentelemetry.io/contrib/bridges/otelzap"
 	"go.uber.org/zap"
 )
 
@@ -15,7 +14,7 @@ type EvaluationResponse struct {
 }
 
 func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
-	log := otelzap.L(r.Context())
+	log := logger.With(traceFields(r.Context())...)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok"}); err != nil {
@@ -24,7 +23,7 @@ func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) evaluationHandler(w http.ResponseWriter, r *http.Request) {
-	log := otelzap.L(r.Context())
+	log := logger.With(traceFields(r.Context())...)
 	w.Header().Set("Content-Type", "application/json")
 
 	// 1. Parsear os query parameters

@@ -3,11 +3,12 @@ package main
 import (
 	//"crypto/sha256"
 	//"encoding/hex"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 
-	"go.opentelemetry.io/contrib/bridges/otelzap"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +26,7 @@ type CreateKeyResponse struct {
 
 // healthHandler é um simples endpoint de verificação de saúde
 func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
-	log := otelzap.L(r.Context())
+	log := logger.With(traceFields(r.Context())...)
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok"}); err != nil {
 		log.Error("failed to encode health response", zap.Error(err))
@@ -34,7 +35,7 @@ func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
 
 // validateKeyHandler verifica se uma chave de API (enviada via Header) é válida
 func (a *App) validateKeyHandler(w http.ResponseWriter, r *http.Request) {
-	log := otelzap.L(r.Context())
+	log := logger.With(traceFields(r.Context())...)
 	// Extrai a chave do header "Authorization: Bearer <key>"
 	authHeader := r.Header.Get("Authorization")
 	keyString := strings.TrimPrefix(authHeader, "Bearer ")
@@ -66,7 +67,7 @@ func (a *App) validateKeyHandler(w http.ResponseWriter, r *http.Request) {
 
 // createKeyHandler cria uma nova chave de API
 func (a *App) createKeyHandler(w http.ResponseWriter, r *http.Request) {
-	log := otelzap.L(r.Context())
+	log := logger.With(traceFields(r.Context())...)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 		return

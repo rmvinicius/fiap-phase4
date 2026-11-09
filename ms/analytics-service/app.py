@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 import uuid
+from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -14,7 +15,7 @@ from pythonjsonlogger import jsonlogger
 
 # Configura o logging estruturado JSON com trace_id do OpenTelemetry
 class OpenTelemetryJsonFormatter(jsonlogger.JsonFormatter):
-    def add_fields(self, log_record, record, message_dict):
+    def add_fields(self, log_record: dict[str, Any], record: logging.LogRecord, message_dict: dict[str, Any]) -> None:
         super().add_fields(log_record, record, message_dict)
         # Adiciona trace_id e span_id do contexto OpenTelemetry
         try:
@@ -26,7 +27,8 @@ class OpenTelemetryJsonFormatter(jsonlogger.JsonFormatter):
                     log_record['trace_id'] = format(ctx.trace_id, '032x')
                 if ctx.span_id:
                     log_record['span_id'] = format(ctx.span_id, '016x')
-        except Exception:
+        except (ImportError, AttributeError):
+            # OpenTelemetry not available or span context not accessible
             pass
 
 # Configura o logger raiz com JSON formatter
