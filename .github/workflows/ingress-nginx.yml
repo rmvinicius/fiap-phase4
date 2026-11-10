@@ -87,6 +87,7 @@ jobs:
         run: |
           helm upgrade --install ingress-nginx --version 4.15.1 ingress-nginx/ingress-nginx --namespace ${{ env.NAMESPACE }} --create-namespace -f values.yaml
           kubectl apply -f microservice-ingress.yaml
-          kubectl apply -f route-service.yaml
+          #kubectl apply -f route-service.yaml
           kubectl apply -f argocd-ingress.yaml
           kubectl apply -f grafana-ingress.yaml
+          kubectl apply -f github-webhook.yaml

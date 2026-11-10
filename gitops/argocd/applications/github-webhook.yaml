@@ -26,6 +26,11 @@ spec:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - PruneLast=true
+    ignoreDifferences:
+      - group: ""
+        kind: Secret
+        name: github-webhook-secrets
+        namespace: monitoring
     retry:
       limit: 5
       backoff:

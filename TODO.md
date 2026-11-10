@@ -146,13 +146,23 @@
 
 # O que falta
 
-* Utilizar secret da aws ao invés de secret do cluster
+* Retirar sync do argocd na secret do github-webhook. = OK
+
+* Testar o webhook para ver se gera o github actions
+
 * Melhorar o dashboard do http status
+
 * Criar o alert para cada serviço
 
-* Criar conta no pagerduty e abrir um incidente automaticamente
+* Criar conta no pagerduty = OK
+
 * Configurar notificação para envio pro Slack, Discord ou teams
+
 * Ao gerar um alerta, criar um automation runbook ou aws lambda para reiniciar o auth-service
+
+* Verificar o trace distribuido, o span esta aparecendo apenas a chamada, e nao aparece banco, redis...
+
+
 
 * Instalar new relic gratuito
 * Distributed tracing: Ao fazer uma requisição no evaluation-service, o APM deve mostrar o trace da requisição

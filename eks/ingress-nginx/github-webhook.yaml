@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-nginx
+  namespace: monitoring
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+        - path: /github-webhook(/|$)(.*)
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: github-webhook-svc
+              port:
+                number: 8080
