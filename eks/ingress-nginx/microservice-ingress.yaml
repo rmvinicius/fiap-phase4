@@ -47,10 +47,3 @@ spec:
               name: analytics-service-svc
               port:
                 number: 8005
-        - path: /github-webhook(/|$)(.*)
-          pathType: ImplementationSpecific
-          backend:
-            service:
-              name: github-webhook-svc
-              port:
-                number: 8080
