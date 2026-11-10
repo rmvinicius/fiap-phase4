@@ -148,7 +148,7 @@ def webhook():
 
     log.info(f"Webhook recebido: alert={alertname} service={service} namespace={namespace}")
 
-    url = f"https://api.github.com/repos/{GH_REPO}/dispatches/{EVENT_TYPE}"
+    url = f"https://api.github.com/repos/{GH_REPO}/dispatches"
     headers = {
         "Authorization": f"Bearer {GH_TOKEN}",
         "Accept": "application/vnd.github+json",
