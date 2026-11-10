@@ -120,16 +120,7 @@
 * Criar dashboard com monitoramento das metricas dos microserviços = OK
 * Plus: Adicionar o traceid no log para fazer o trace to log + log output em logback = OK
 
------
-
-# O que falta
-
-
-* Instalar new relic gratuito
-* Distributed tracing: Ao fazer uma requisição no evaluation-service, o APM deve mostrar o trace da requisição
-* Service Map: o APM deve mostrar as dependencias dos 5 microserviços
-
-* Criar alerta no APM ou Grafana para taxa de erros 5xx do auth-service maior que 5%
+* Criar alerta no Grafana para taxa de erros 5xx do auth-service maior que 5%
 
     Acessar grafana > Alerting > Alert rules > New alert rule
 
@@ -137,15 +128,9 @@
 
     Consulta:
 
-    (
-    sum(rate(http_requests_total{status=~"5.."}[5m])) +
-    sum(rate(flask_http_request_total{status=~"5.."}[5m]))
-    ) /
+    (sum(rate(http_requests_total{status=~"5.."}[5m]))) /
     clamp_min(
-    sum(rate(http_requests_total[5m])) +
-    sum(rate(flask_http_request_total[5m])),
-    1
-    )
+    sum(rate(http_requests_total[5m])) + 1)
 
     Condição: Reduce → Last → is above → 0.05.
     Intervalo: 1m; For: 2m.
@@ -157,9 +142,21 @@
     Contact points → Add contact point → Slack
     Contact points → Add contact point → Webhook URL: http://grafana-github-relay.monitoring.svc.cluster.local/webhook
 
+-----
+
+# O que falta
+
+* Utilizar secret da aws ao invés de secret do cluster
+* Melhorar o dashboard do http status
+* Criar o alert para cada serviço
+
 * Criar conta no pagerduty e abrir um incidente automaticamente
 * Configurar notificação para envio pro Slack, Discord ou teams
 * Ao gerar um alerta, criar um automation runbook ou aws lambda para reiniciar o auth-service
+
+* Instalar new relic gratuito
+* Distributed tracing: Ao fazer uma requisição no evaluation-service, o APM deve mostrar o trace da requisição
+* Service Map: o APM deve mostrar as dependencias dos 5 microserviços
 
 # Evidências
 
