@@ -130,6 +130,37 @@
 * Service Map: o APM deve mostrar as dependencias dos 5 microserviços
 
 * Criar alerta no APM ou Grafana para taxa de erros 5xx do auth-service maior que 5%
+
+    Acessar grafana > Alerting > Alert rules
+
+
+    Open Grafana: http://<ELB>/grafana/ (or port-forward kubectl port-forward svc/grafana 3000:80 -n monitoring)
+    Log in (admin / admin2026).
+    Go to Alerting → Alert rules → New alert rule.
+    Select datasource: prometheus.
+    Write the query (5xx error rate > 5%):
+    (
+    sum(rate(http_requests_total{status=~"5.."}[5m])) +
+    sum(rate(flask_http_request_total{status=~"5.."}[5m]))
+    ) /
+    clamp_min(
+    sum(rate(http_requests_total[5m])) +
+    sum(rate(flask_http_request_total[5m])),
+    1
+    )
+    Set condition: Reduce → Last → is above → 0.05.
+    Evaluation interval: 1m; For: 2m.
+    Annotations: add summary, description, runbook_url.
+    Notifications: select an existing contact point or create one:
+    Contact points → Add contact point → choose Slack or Webhook → paste your webhook URL.
+    For PagerDuty, create a contact point of type PagerDuty and paste the integration key.
+    Save the rule. Grafana will start evaluating it and firing alerts through its own contact points.
+
+
+
+
+
+
 * Criar conta no pagerduty e abrir um incidente automaticamente
 * Configurar notificação para envio pro Slack, Discord ou teams
 * Ao gerar um alerta, criar um automation runbook ou aws lambda para reiniciar o auth-service
@@ -144,3 +175,4 @@
 * Print de um Trace distribuído no APM.
 * Print da notificação de incidente no ChatOps.
 * Print do log/execução da automação de Self-Healing.
+

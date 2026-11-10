@@ -64,8 +64,8 @@ class TestWebhook:
             assert data["dispatched"] is True
             assert data["github_status"] == 204
 
-            args, kwargs = mock_post.call_args
-            assert "dispatches" in args[0]
+            kwargs = mock_post.call_args.kwargs
+            assert "dispatches" in mock_post.call_args.args[0]
             assert kwargs["headers"]["Authorization"] == "Bearer test-token"
             body = kwargs["json"]
             assert body["client_payload"]["service"] == "auth-service"
@@ -113,7 +113,7 @@ class TestWebhook:
 
             response = client.post('/webhook', json=payload)
             assert response.status_code == 200
-            args, kwargs = mock_post.call_args
+            kwargs = mock_post.call_args.kwargs
             body = kwargs["json"]
             assert body["client_payload"]["service"] == "auth-service"
             assert body["client_payload"]["namespace"] == "application"
