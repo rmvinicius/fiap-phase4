@@ -1,0 +1,43 @@
+name: "🚑 Self Automation: restart service on 5xx alert"
+
+on:
+  repository_dispatch:
+    types: [fiap-5xx-alert]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service to restart"
+        required: false
+        default: "auth-service"
+      namespace:
+        description: "Kubernetes namespace"
+        required: false
+        default: "application"
+
+jobs:
+  restart:
+    runs-on: [self-hosted, eks, private]
+    steps:
+      - name: 🔧 Configure AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN_DEV }}
+          aws-region: us-east-1
+
+      - name: 🔧 Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name ${{ secrets.EKS_CLUSTER_NAME_DEV }}
+
+      - name: 🔍 Verify connection
+        run: kubectl get nodes
+
+      - name: 🔄 Restart failing service
+        env:
+          SERVICE: ${{ github.event.client_payload.service || inputs.service || 'auth-service' }}
+          NAMESPACE: ${{ github.event.client_payload.namespace || inputs.namespace || 'application' }}
+        run: |
+          echo "Restarting $SERVICE in namespace $NAMESPACE"
+          kubectl rollout restart deployment/$SERVICE -n $NAMESPACE
+          kubectl rollout status deployment/$SERVICE -n $NAMESPACE --timeout=300s

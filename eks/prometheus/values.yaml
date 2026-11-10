@@ -7,6 +7,42 @@ alertmanager:
     storageClass: "local-path"
     storageClassName: "local-path"
     size: 2Gi
+# Configurar as regras de alertas via helm
+#  alertmanager.yml:
+#    route:
+#      receiver: 'fiap-team'
+#      group_by: ['alertname', 'service', 'severity']
+#      group_wait: 30s
+#      group_interval: 1m
+#      repeat_interval: 4h
+#      routes:
+#        - match:
+#            severity: critical
+#          receiver: 'pagerduty-fiap'
+#        - match:
+#            severity: warning
+#          receiver: 'slack-fiap'
+#    receivers:
+#      - name: 'fiap-team'
+#      - name: 'pagerduty-fiap'
+#        pagerduty_configs:
+#          - service_key: '<PAGERDUTY_INTEGRATION_KEY>'
+#            send_resolved: true
+#      - name: 'slack-fiap'
+#        slack_configs:
+#          - api_url: '<SLACK_WEBHOOK_URL>'
+#            channel: '#alerts-fiap'
+#            title: '{{ .CommonLabels.alertname }}'
+#            text: '{{ .CommonAnnotations.description }}'
+#            send_resolved: true
+#      - name: 'self-heal-gh'
+#        webhook_configs:
+#          - url: 'https://api.github.com/repos/rmvinicius/fiap-phase4/dispatches/fiap-5xx-alert'
+#            http_config:
+#              authorization:
+#                type: Bearer
+#                credentials: '<GITHUB_PAT_WITH_REPO_SCOPE>'
+#            send_resolved: false
 
 kube-state-metrics:
   enabled: true
@@ -20,6 +56,7 @@ prometheus-pushgateway:
 server:
   extraArgs:
     web.enable-otlp-receiver: ""
+    #web.route-prefix: /prometheus
   global:
     scrape_interval: 1m
     scrape_timeout: 10s
@@ -75,3 +112,29 @@ extraScrapeConfigs: |
       - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
         action: replace
         target_label: app
+
+# Configurar alert rules direto via helm
+#serverFiles:
+#  alerting_rules.yml:
+#    groups:
+#      - name: fiap-phase4.errors
+#        rules:
+#          - alert: High5xxErrorRate
+#            expr: >
+#              (
+#                sum(rate(http_requests_total{status=~"5.."}[5m])) +
+#                sum(rate(flask_http_request_total{status=~"5.."}[5m]))
+#              ) /
+#              clamp_min(
+#                sum(rate(http_requests_total[5m])) +
+#                sum(rate(flask_http_request_total[5m])),
+#                1
+#              ) > 0.05
+#            for: 2m
+#            labels:
+#              severity: critical
+#              service: auth-service
+#            annotations:
+#              summary: "High 5xx error rate on {{ $labels.service }}"
+#              description: "5xx error rate is {{ $value | printf \"%.2%%\" }} (> 5%) over the last 5 minutes, sustained for 2m."
+#              runbook_url: "https://github.com/rmvinicius/fiap-phase4/blob/main/.github/workflows/runbook-alertmanager.yml"

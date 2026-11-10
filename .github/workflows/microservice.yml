@@ -9,6 +9,7 @@ on:
       - 'ms/evaluation-service/**'
       - 'ms/flag-service/**'
       - 'ms/targeting-service/**'
+      - 'ms/github-webhook/**'
       - '.github/workflows/microservice.yml'
       - '.github/workflows/template-python.yml'
       - '.github/workflows/template-go.yml'
@@ -20,6 +21,7 @@ on:
       - 'ms/evaluation-service/**'
       - 'ms/flag-service/**'
       - 'ms/targeting-service/**'
+      - 'ms/github-webhook/**'
       - '.github/workflows/microservice.yml'
       - '.github/workflows/template-python.yml'
       - '.github/workflows/template-go.yml'
@@ -36,6 +38,7 @@ on:
           - evaluation-service
           - flag-service
           - targeting-service
+          - github-webhook
       environment:
         description: "Target environment"
         required: true
@@ -63,6 +66,7 @@ jobs:
       evaluation: ${{ steps.filter.outputs.evaluation }}
       flag:       ${{ steps.filter.outputs.flag }}
       targeting:  ${{ steps.filter.outputs.targeting }}
+      github-webhook:  ${{ steps.filter.outputs.github-webhook }}
       environment: ${{ steps.resolve.outputs.ENV }}
       ecr_registry: ${{ steps.set-ecr.outputs.registry }}
     steps:
@@ -105,6 +109,8 @@ jobs:
               - 'ms/flag-service/**'
             targeting:
               - 'ms/targeting-service/**'
+            github-webhook:
+              - 'ms/github-webhook/**'
 
   # ===========================================================================
   # Python services
@@ -151,6 +157,22 @@ jobs:
     with:
       service-name: targeting-service
       working-dir: ms/targeting-service
+      environment: ${{ needs.changes.outputs.environment }}
+      push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      ecr-registry: ${{ needs.changes.outputs.ecr_registry }}
+      python-version: "3.11"
+    secrets: inherit
+
+  github-webhook:
+    name: "🐍 github-webhook"
+    needs: changes
+    if: |
+      needs.changes.outputs.github-webhook == 'true'
+      || (github.event_name == 'workflow_dispatch' && (inputs.service == 'all' || inputs.service == 'github-webhook'))
+    uses: ./.github/workflows/template-python.yml
+    with:
+      service-name: github-webhook
+      working-dir: ms/github-webhook
       environment: ${{ needs.changes.outputs.environment }}
       push-image: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       ecr-registry: ${{ needs.changes.outputs.ecr_registry }}

@@ -180,4 +180,5 @@ ecr_repositories = [
   "auth-service",
   "evaluation-service",
   "helm/microservice",
+  "github-webhook",
 ]

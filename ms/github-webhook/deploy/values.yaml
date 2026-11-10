@@ -1,0 +1,68 @@
+name: github-webhook
+namespace: monitoring
+port: 8080
+replicas: 1
+resources:
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+image:
+  repository: 218443855829.dkr.ecr.us-east-1.amazonaws.com
+  name: github-webhook
+  tag: "v1.0.0"
+  pullPolicy: IfNotPresent
+configmap:
+  PORT: "8080"
+  GH_REPO: "rmvinicius/fiap-phase4"
+  EVENT_TYPE: "fiap-5xx-alert"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4318"
+secrets:
+  GH_PAT: ""
+probes:
+  startup:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 9
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+service:
+  type: ClusterIP
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicaCount: 5
+  averageCpuUtilization: 90
+  averageMemoryUtilization: 90
+keda:
+  enabled: false
+  type: ""
+  minReplicaCount: 0
+  maxReplicaCount: 5
+  cooldownPeriod: 30
+  pollingInterval: 10
+  queueLength: "5"
+  awsRegion: "us-east-1"
+  queueURL: ""
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+  awsSessionToken: ""

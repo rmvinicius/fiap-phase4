@@ -115,14 +115,16 @@
 
 * Configurado o grafana com datasource tempo, loki e prometheus
 
+* Criar dashboard com monitoramento do cluster = OK
+* Criar dashboard com logs dos microserviços   = OK
+* Criar dashboard com monitoramento das metricas dos microserviços = OK
+* Plus: Adicionar o traceid no log para fazer o trace to log + log output em logback = OK
+
 -----
 
 # O que falta
 
-* Criar dashboard com monitoramento do cluster
-* Criar dashboard com logs dos microserviços
-* Criar dashboard com monitoramento das metricas dos microserviços
-* Plus: Adicionar o traceid no log para fazer o trace to log + log output em logback
+
 * Instalar new relic gratuito
 * Distributed tracing: Ao fazer uma requisição no evaluation-service, o APM deve mostrar o trace da requisição
 * Service Map: o APM deve mostrar as dependencias dos 5 microserviços
