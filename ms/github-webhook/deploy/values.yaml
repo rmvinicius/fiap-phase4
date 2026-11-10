@@ -20,7 +20,7 @@ configmap:
   EVENT_TYPE: "fiap-5xx-alert"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://alloy.monitoring.svc.cluster.local:4318"
 secrets:
-  GH_PAT: ""
+  GH_PAT: "dGVzdGU="
 probes:
   startup:
     path: /health
