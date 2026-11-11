@@ -1,19 +1,19 @@
 # Fiap Phase 4 - Toggle Master
 
-Projeto desenvolvido para o **Tech Challenge da FIAP (Fase 4)**, implementando uma arquitetura de microserviços baseada em Kubernetes (EKS) na AWS, com deploy automatizado via CI/CD utilizando GitOps (ArgoCD) e uma stack completa de observabilidade (métricas, logs, traces) com automação de auto-cura (self-healing) via Alertmanager + GitHub Actions.
+Projeto desenvolvido para o **Tech Challenge da FIAP (Fase 4)**, implementando uma arquitetura de microserviços baseada em Kubernetes (EKS) na AWS, com deploy automatizado via CI/CD utilizando GitOps (ArgoCD) e uma stack de observabilidade (métricas, logs e traces) com automação de auto-cura (self-healing) via Alertmanager/Grafana + GitHub Actions.
 
 ## Visão Geral
 
-O **Toggle Master** é uma plataforma de *feature flags* e *targeting* que permite o gerenciamento dinâmico de funcionalidades em aplicações. A arquitetura é composta por seis microserviços organizados em camadas, acompanhados de uma stack de observabilidade instalada no cluster EKS.
+O **Toggle Master** é uma plataforma de *feature flags* e *targeting* que permite o gerenciamento dinâmico de funcionalidades em aplicações. A arquitetura é composta por seis microserviços, uma stack de observabilidade instalada no cluster EKS e pipelines de CI/CD para infraestrutura, aplicações e componentes do cluster.
 
-| Microserviço | Linguagem | Banco de Dados | Descrição |
+| Microserviço | Linguagem | Banco de Dados / Integrações | Descrição |
 |---|---|---|---|
 | **auth-service** | Go | RDS PostgreSQL (`auth_db`) | Autenticação e autorização de usuários |
 | **flag-service** | Python (Flask) | RDS PostgreSQL (`flags_db`) | Criação e gerenciamento de feature flags |
 | **targeting-service** | Python (Flask) | RDS PostgreSQL (`targeting_db`) | Regras de targeting e segmentação de usuários |
 | **evaluation-service** | Go | Redis (cache), SQS | Avaliação de flags e envio de eventos para SQS |
 | **analytics-service** | Python (Flask) | DynamoDB | Processamento e análise de eventos de uso |
-| **github-webhook** | Python (Flask) | — | Relay de webhooks Grafana/Alertmanager → GitHub Actions (self-healing) |
+| **github-webhook** | Python (Flask) | — | Relay de webhooks Grafana/Alertmanager para disparar auto-cura via GitHub Actions |
 
 ### Stack de Observabilidade (`eks/`)
 
@@ -21,10 +21,20 @@ O **Toggle Master** é uma plataforma de *feature flags* e *targeting* que permi
 |---|---|
 | **Prometheus** | Coleta e armazenamento de métricas do cluster e dos microserviços |
 | **Loki** | Agregação e consulta de logs dos microserviços |
-| **Grafana** | Dashboards, alertas (taxa de erros 5xx > 5%) e notificações |
+| **Grafana** | Dashboards, alertas e notificações |
 | **Alloy** | Coleta de telemetria OpenTelemetry (métricas, logs, traces) dos serviços |
 | **Tempo** | Rastreamento distribuído (distributed tracing) |
-| **New Relic** | APM opcional (service map, traces, métricas de aplicação) |
+| **New Relic** | Manifests/configuração de APM e instrumentação (opcional) |
+
+### Estado atual (últimas modificações)
+
+- Microserviço `github-webhook` adicionado ao fluxo de build/deploy e às applications do ArgoCD.
+- Workflow `runbook-alertmanager.yml` para auto-cura por `repository_dispatch` (`fiap-5xx-alert`), reiniciando o serviço afetado no EKS.
+- Workflows `monitoring.yml` e `newrelic.yml` para instalação/atualização da stack de observabilidade e do New Relic.
+- Stack de monitoramento provisionada com Prometheus, Loki, Grafana, Alloy e Tempo; datasources e dashboard de cluster configurados no Grafana.
+- Addons `kube-state-metrics` e `metrics-server` adicionados ao cluster EKS (suporte a métricas/HPA).
+- Adoção de `StorageClass` `local-path` (rancher local-path-provisioner) para ambientes de lab AWS sem `gp2/gp3`.
+- Ajustes recentes em workflows, credenciais e testes do `github-webhook`.
 
 ## Estrutura do Projeto
 
@@ -34,8 +44,9 @@ fiap-phase4/
 ├── ms/                 # Microserviços da aplicação
 ├── helm/               # Charts Helm para Kubernetes
 ├── gitops/             # Configurações GitOps (ArgoCD)
-├── eks/                # Manifestos e configurações do cluster EKS (inclui stack de monitoramento)
+├── eks/                # Manifestos e configurações do cluster EKS (componentes e observabilidade)
 ├── .github/            # Workflows do GitHub Actions (CI/CD)
+├── TODO.md             # Anotações de execução/setup do ambiente e do desafio
 └── README.md           # Este arquivo
 ```
 
@@ -312,19 +323,22 @@ eks/
 
 ### Observabilidade implementada
 
-- **Métricas**: Prometheus expõe métricas do cluster (kube-state-metrics, metrics-server) e dos microserviços (contadores HTTP, taxa de erros 5xx).
-- **Logs**: Loki coleta os logs dos microserviços, que incluem `traceid` para correlação com traces.
-- **Traces**: Alloy recebe exportação OpenTelemetry dos serviços e encaminha ao Tempo para rastreamento distribuído.
-- **Alertas**: Grafana com alerta de taxa de erros 5xx maior que 5% no `auth-service`, com notificações para PagerDuty, Slack e webhook (auto-cura).
-- **APM**: New Relic (conta gratuita education) com service map das dependências dos 5 microserviços.
+- **Métricas**: Prometheus coleta métricas do cluster e dos microserviços (incluindo suporte via `kube-state-metrics` e `metrics-server`).
+- **Logs**: Loki agrega logs dos microserviços; os serviços são instrumentados para exportação OpenTelemetry e correlação via `traceid` quando disponível.
+- **Traces**: Alloy recebe telemetria OpenTelemetry dos serviços e encaminha ao Tempo para rastreamento distribuído.
+- **Dashboards**: Grafana configurado com datasources (Prometheus, Loki, Tempo) e dashboard de monitoramento do cluster.
+- **Alertas e notificações**: Grafana/Alertmanager com alertas (ex.: taxa de erros 5xx) e notificações para canais configurados e para o `github-webhook` (auto-cura).
+- **APM**: manifests e instrumentação do New Relic disponíveis em `eks/newrelic/` (uso opcional).
 
 ### Setup
 
-Veja `eks/TODO.md` para instruções de:
-- Configuração de self-hosted runner no EKS
+Veja `eks/TODO.md` e `TODO.md` (raiz) para instruções/anotações de:
+
+- Configuração de runner self-hostado no EKS
 - Conexão do ArgoCD com o repositório Git (via CLI ou UI)
 - Criação da StorageClass `local-path` (rancher local-path-provisioner)
-- Instalação da stack de monitoramento
+- Instalação/atualização da stack de monitoramento e componentes do cluster
+- Ajustes operacionais do lab (credenciais AWS, secrets do `github-webhook`, PVCs de Grafana/Prometheus, etc.)
 
 ---
 
@@ -354,25 +368,25 @@ Veja `eks/TODO.md` para instruções de:
 
 ### Pipeline de Microserviços
 
-1. **`microservice.yml`** (orquestrador) — detecta quais serviços tiveram mudanças (via `paths-filter`) e dispara os workflows reutilizáveis. Inclui agora o `github-webhook`.
-2. **`template-python.yml`** — build da imagem Docker, push para ECR, deploy via Helm no ambiente correspondente (`develop` → DEV, `staging` → STG, `main` → PRD).
+1. **`microservice.yml`** (orquestrador) — detecta quais serviços tiveram mudanças (via `paths-filter`) e dispara os workflows reutilizáveis. Inclui `github-webhook`.
+2. **`template-python.yml`** — build da imagem Docker, push para ECR e atualização da tag no `deploy/values.yaml` dos serviços Python.
 3. **`template-go.yml`** — mesmo fluxo para serviços em Go.
 
 ### Pipeline de Infraestrutura
 
-4. **`terraform-ci.yml`** — `terraform fmt`, `validate`, `plan` e `apply` automáticos no branch `develop`.
-5. **`terraform-destroy.yml`** — `terraform destroy` para limpeza de recursos.
+4. **`terraform-ci.yml`** — `fmt`, `validate`, `plan` e `apply` do Terraform (conforme gatilho/ambiente).
+5. **`terraform-destroy.yml`** — destruição da infraestrutura via Terraform.
 
 ### Pipeline de Componentes EKS
 
 6. **`argo-cd-install.yml`** — instalação/atualização do ArgoCD via Helm.
 7. **`ingress-nginx.yml`** — instalação/atualização do NGINX Ingress Controller.
 8. **`keda.yml`** — instalação/atualização do KEDA.
-9. **`monitoring.yml`** — instalação/atualização da stack de monitoramento (Prometheus, Loki, Grafana, Alloy, Tempo) por serviço ou `all`.
-10. **`newrelic.yml`** — instalação/atualização do New Relic (APM).
-11. **`gitops.yml`** — sincronização de aplicações ArgoCD.
-12. **`helm-ms.yml`** — deploy de manifests Helm para microserviços.
-13. **`runbook-alertmanager.yml`** — automação self-healing: recebe `repository_dispatch` do github-webhook e reinicia o microserviço com erro via `kubectl rollout restart`.
+9. **`monitoring.yml`** — instalação/atualização da stack de monitoramento (Prometheus, Loki, Grafana, Alloy, Tempo), por componente ou `all`.
+10. **`newrelic.yml`** — instalação/atualização do New Relic (APM/instrumentação).
+11. **`gitops.yml`** — aplicação das manifests do ArgoCD no cluster.
+12. **`helm-ms.yml`** — lint/versionamento/publicação do chart Helm de microserviços.
+13. **`runbook-alertmanager.yml`** — auto-cura: recebe `repository_dispatch` (`fiap-5xx-alert`) e executa `kubectl rollout restart` no serviço afetado.
 
 ### Detalhamento dos Workflows (CI/CD)
 
@@ -540,20 +554,16 @@ Workflow disparado por `repository_dispatch` (tipo `fiap-5xx-alert`) enviado pel
 
 ---
 
-### Fluxo de Secrets do GitHub
+### Secrets do GitHub (CI/CD)
 
-Todos os workflows resolvem dinamicamente as credenciais baseadas no ambiente:
+Os workflows utilizam secrets configurados no GitHub e, em geral, resolvem credenciais por ambiente (DEV/STG/PRD) conforme o contexto de execução. Exemplos comuns:
 
-```
-secrets[format('AWS_ACCESS_KEY_ID_{0}', ENV)]       # DEV / STG / PRD
-secrets[format('AWS_SECRET_ACCESS_KEY_{0}', ENV)]
-secrets[format('AWS_SESSION_TOKEN_{0}', ENV)]
-secrets[format('RDS_PASSWORD_AUTH_DB_{0}', ENV)]     # apenas terraform
-secrets[format('RDS_PASSWORD_FLAGS_DB_{0}', ENV)]
-secrets[format('RDS_PASSWORD_TARGETING_DB_{0}', ENV)]
-secrets[format('ECR_REGISTRY')]                      # apenas microservice
-secrets[format('EKS_CLUSTER_NAME_{0}', ENV)]        # gitops, monitoring, newrelic, runbook
-```
+- `AWS_ACCESS_KEY_ID_*`, `AWS_SECRET_ACCESS_KEY_*`, `AWS_SESSION_TOKEN_*` — credenciais AWS por ambiente
+- `RDS_PASSWORD_AUTH_DB_*`, `RDS_PASSWORD_FLAGS_DB_*`, `RDS_PASSWORD_TARGETING_DB_*` — senhas de bancos (Terraform)
+- `ECR_REGISTRY` — registry do ECR para build/push de imagens e charts
+- `EKS_CLUSTER_NAME_*` — nome do cluster EKS (workflows que operam no cluster)
+
+Consulte os arquivos em `.github/workflows/` para a lista exata e o mapeamento por ambiente.
 
 ---
 
@@ -604,24 +614,24 @@ O deploy automático é feito via GitHub Actions. Ao fazer `push` para `develop`
 
 ### 4. Instalar Stack de Monitoramento
 
-```bash
-# Via GitHub Actions (workflow_dispatch ou push em eks/*)
-# Ou manualmente via runner self-hostado
-```
+Instale via GitHub Actions (`monitoring.yml`, por componente ou `all`) ou manualmente no runner self-hostado do cluster.
 
-Cada componente é instalado no namespace `monitoring`:
+Componentes no namespace `monitoring`:
+
 - Prometheus (métricas)
 - Loki (logs)
-- Grafana (dashboards + alertas)
+- Grafana (dashboards, alertas e notificações)
 - Alloy (telemetria OpenTelemetry)
 - Tempo (traces distribuídos)
-- New Relic (APM, opcional)
+
+Opcional: `newrelic.yml` para instalação de manifests/instrumentação do New Relic.
 
 ### 5. Configurar Auto-cura (Self-Healing)
 
-1. Implante o serviço `github-webhook` (relay de webhooks).
-2. Configure o webhook do Grafana/Alertmanager apontando para `http://grafana-github-relay.monitoring.svc.cluster.local/webhook`.
-3. Ao disparar alerta `High5xxErrorRate`, o github-webhook envia `repository_dispatch` → `runbook-alertmanager.yml` reinicia o serviço com erro.
+1. Garanta o deploy do serviço `github-webhook` (relay de webhooks).
+2. Configure o contato/webhook no Grafana/Alertmanager para o endpoint do `github-webhook` no cluster.
+3. No disparo de um alerta de erro 5xx (ex.: `High5xxErrorRate`), o `github-webhook` envia `repository_dispatch` (`fiap-5xx-alert`) para o GitHub.
+4. O workflow `runbook-alertmanager.yml` reinicia o microserviço afetado via `kubectl rollout restart` no namespace da aplicação.
 
 ### 6. Acesso ao Cluster EKS
 
@@ -639,4 +649,4 @@ argocd login <argo-cd-endpoint> --username admin --password <password>
 argocd app sync <app-name>
 ```
 
-Consulte `eks/TODO.md` para mais detalhes sobre o setup do ArgoCD, do ingress-nginx e do runner self-hostado.
+Consulte `eks/TODO.md`, `terraform/TODO.md` e `TODO.md` (raiz) para detalhes de setup, operação do ambiente de lab e anotações do desafio.
