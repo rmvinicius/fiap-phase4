@@ -2,23 +2,23 @@
 
 ## Provisionar os recursos no cluster:
 
-* Prometheus | OK
-* Loki       | OK
-* Grafana    | OK
-* Alloy      | OK
-* Tempo      | OK
+* [OK] Prometheus
+* [OK] Loki
+* [OK] Grafana
+* [OK] Alloy
+* [OK] Tempo
 
 # Etapa 2
 
-* Configurar os microserviços com opentelemetry e expor no alloy        | OK
-* Configurar o datadog ou new relic em contas gratuitas for education
+* [OK] Configurar os microserviços com opentelemetry e expor no alloy
+* Configurar o datadog ou new relic em contas gratuitas for education -> Não precisa
 
 # Etapa 3
 
-* No grafana ou APM, gerar alertas com taxas de erro 5xx maiores que 5%
-* Criar uma conta no PagerDuty para abrir incidente automaticamente
-* Notificar no slack ou discord
-* Criar uma automação no github action ou aws lambda via webhook reiniciando o serviço após incidente
+* [OK] No grafana ou APM, gerar alertas com taxas de erro 5xx maiores que 5%
+* [OK] Criar uma conta no PagerDuty para abrir incidente automaticamente
+* [OK] Notificar no slack ou discord
+* [OK] Criar uma automação no github action ou aws lambda via webhook reiniciando o serviço após incidente
 
 # Execuções
 
@@ -117,60 +117,69 @@
 
 * Configurado o grafana com datasource tempo, loki e prometheus
 
-* Criar dashboard com monitoramento do cluster = OK
-* Criar dashboard com logs dos microserviços   = OK
-* Criar dashboard com monitoramento das metricas dos microserviços = OK
-* Plus: Adicionar o traceid no log para fazer o trace to log + log output em logback = OK
+* Criado dashboard com monitoramento do cluster
+* Criado dashboard com logs dos microserviços
+* Criado dashboard com monitoramento das metricas dos microserviços
+* Plus: Adicionado o traceid no log para fazer o trace to log + log output em logback
 
-* Criar alerta no Grafana para taxa de erros 5xx do auth-service maior que 5%
+* Criado conta/configurar o PagerDuty
+    * Criar o service e gerar token
+        https://cresol-teste.pagerduty.com/
+    
+* Criado conta/configurar slack
+
+* Criado webhook.site para teste
+
+* Retirado sync do argocd na secret do github-webhook para não expor o TOKEN do github actions
+
+* Criado o microserviço "github-webhook" para servir como middleware de integração entre o trigger do alert rules com github actions
+    * Retirado sync do argocd na secret do github-webhook para não expor o TOKEN do github actions
+
+* Criado workflow para reinicio dos serviços via dispatch
+
+* Criado alerta no Grafana para taxa de erros 5xx do auth-service maior que 5%
 
     Acessar grafana > Alerting > Alert rules > New alert rule
 
-    Selecionar: prometheus
+    Nome: Go Applications (5xx Error) | Python Applications (5xx Error)
+    Query: prometheus
 
-    Consulta:
+    # Go applications
+    sum by(app) (rate(http_requests_total{app!="",status=~"5.."}[5m])) / (sum by(app) (rate(http_requests_total[5m]) + 1))
 
-    (sum(rate(http_requests_total{status=~"5.."}[5m]))) /
-    clamp_min(
-    sum(rate(http_requests_total[5m])) + 1)
+    # Python applications
+    sum by(app) (rate(flask_http_requests_total{app!="",status=~"5.."}[5m])) / (sum by(app) (rate(flask_http_requests_total[5m]) + 1))
 
-    Condição: Reduce → Last → is above → 0.05.
+    Condição: When Query is above → 0.05.
+
+    Add folder and labels: HTTP Alerts / Labels empty
+    Evaluation behavior: microservices
     Intervalo: 1m; For: 2m.
-    Annotations: add summary, description, runbook_url.
 
     Notificações: 
+        Contact points → Integrations
 
-    Contact points → Add contact point → PagerDuty
-    Contact points → Add contact point → Slack
-    Contact points → Add contact point → Webhook URL: http://grafana-github-relay.monitoring.svc.cluster.local/webhook
-
-* Retirar sync do argocd na secret do github-webhook. = OK
-
-* Testar o webhook para ver se gera o github actions = OK
-
-* Criar conta no pagerduty = OK
-
-* Criar o alert para cada serviço = OK
+    ** Necessário criar um contact point adicionando todas as integrações
+        Alerting > Notification configuration > + New contacting point
+            Name: integrations
+                Webhook | Url: http://github-webhook-svc.monitoring.svc.cluster.local:8080/webhook
+                Webhook | Url: https://webhook.site/e3c7c031-68f7-4a51-801a-d73cb50cd825
+                PagerDuty | $Token
+                Slack | Recipient: #incidents | Webhook Url: $webhook
 
 -----
 
 # O que falta
 
-
-
 * Melhorar o dashboard do http status
-
-* Configurar notificação para envio pro Slack, Discord ou teams
-
-* Ao gerar um alerta, criar um automation runbook ou aws lambda para reiniciar o auth-service
 
 * Verificar o trace distribuido, o span esta aparecendo apenas a chamada, e nao aparece banco, redis...
 
-
-
-* Instalar new relic gratuito
 * Distributed tracing: Ao fazer uma requisição no evaluation-service, o APM deve mostrar o trace da requisição
+
 * Service Map: o APM deve mostrar as dependencias dos 5 microserviços
+
+* Instalar new relic gratuito -> Não precisa
 
 # Evidências
 
