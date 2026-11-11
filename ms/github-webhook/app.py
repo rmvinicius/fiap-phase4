@@ -139,14 +139,13 @@ def webhook():
         log.info(f"Ignorando webhook com status: {data.get('status')}")
         return jsonify({"ignored": True, "status": data.get("status")}), 200
 
-    labels = data.get("commonLabels", {})
-    annotations = data.get("commonAnnotations", {})
+    alerts = data.get("alerts", [])
+    common_labels = data.get("commonLabels", {})
+    common_annotations = data.get("commonAnnotations", {})
 
-    service = labels.get("service", "auth-service")
-    namespace = labels.get("namespace", "application")
-    alertname = labels.get("alertname", "High5xxErrorRate")
-
-    log.info(f"Webhook recebido: alert={alertname} service={service} namespace={namespace}")
+    if not alerts:
+        log.warning("Webhook recebido sem alertas individuais")
+        return jsonify({"dispatched": False, "error": "no alerts"}), 400
 
     url = f"https://api.github.com/repos/{GH_REPO}/dispatches"
     headers = {
@@ -154,27 +153,48 @@ def webhook():
         "Accept": "application/vnd.github+json",
         "Content-Type": "application/json"
     }
-    body = {
-        "event_type": EVENT_TYPE,
-        "client_payload": {
-            "service": service,
-            "namespace": namespace,
-            "alertname": alertname,
-            "status": data.get("status", ""),
-            "summary": annotations.get("summary", ""),
-            "description": annotations.get("description", "")
-        }
-    }
 
-    try:
-        resp = requests.post(url, headers=headers, json=body, timeout=10)
-        log.info(f"GitHub dispatch enviado: status={resp.status_code} body={resp.text}")
-        if resp.status_code in (200, 201, 202, 204):
-            return jsonify({"dispatched": True, "github_status": resp.status_code}), 200
-        return jsonify({"dispatched": False, "github_status": resp.status_code, "error": resp.text}), resp.status_code
-    except requests.RequestException as e:
-        log.error(f"Erro ao enviar dispatch para o GitHub: {e}")
-        return jsonify({"dispatched": False, "error": str(e)}), 502
+    results = []
+    all_ok = True
+
+    for alert in alerts:
+        alert_labels = alert.get("labels", {})
+        alert_annotations = alert.get("annotations", {})
+
+        # Extrai o app da label do alerta (ex: auth-service, evaluation-service)
+        app = alert_labels.get("app") or common_labels.get("app", "unknown")
+        namespace = alert_labels.get("namespace") or common_labels.get("namespace", "application")
+        alertname = alert_labels.get("alertname") or common_labels.get("alertname", "High5xxErrorRate")
+
+        log.info(f"Processando alerta: app={app} alertname={alertname}")
+
+        body = {
+            "event_type": EVENT_TYPE,
+            "client_payload": {
+                "app": app,
+                "namespace": namespace,
+                "alertname": alertname,
+                "status": data.get("status", ""),
+                "summary": alert_annotations.get("summary", "") or common_annotations.get("summary", ""),
+                "description": alert_annotations.get("description", "") or common_annotations.get("description", "")
+            }
+        }
+
+        try:
+            resp = requests.post(url, headers=headers, json=body, timeout=10)
+            log.info(f"GitHub dispatch enviado para app={app}: status={resp.status_code}")
+            if resp.status_code in (200, 201, 202, 204):
+                results.append({"app": app, "dispatched": True, "github_status": resp.status_code})
+            else:
+                all_ok = False
+                results.append({"app": app, "dispatched": False, "github_status": resp.status_code, "error": resp.text})
+        except requests.RequestException as e:
+            all_ok = False
+            log.error(f"Erro ao enviar dispatch para app={app}: {e}")
+            results.append({"app": app, "dispatched": False, "error": str(e)})
+
+    status_code = 200 if all_ok else 502
+    return jsonify({"dispatched": all_ok, "results": results}), status_code
 
 
 if __name__ == '__main__':

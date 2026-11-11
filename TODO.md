@@ -181,3 +181,4 @@
 * Print da notificação de incidente no ChatOps.
 * Print do log/execução da automação de Self-Healing.
 
+(sum(rate(flask_http_request_total{status=~"5.."}[5m]))) / (sum(rate(flask_http_request_total[5m])) + 1)
