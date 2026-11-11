@@ -150,11 +150,13 @@
 
 * Criar conta no pagerduty = OK
 
+* Criar o alert para cada serviço = OK
+
 -----
 
 # O que falta
 
-* Criar o alert para cada serviço
+
 
 * Melhorar o dashboard do http status
 
@@ -180,5 +182,3 @@
 * Print de um Trace distribuído no APM.
 * Print da notificação de incidente no ChatOps.
 * Print do log/execução da automação de Self-Healing.
-
-(sum(rate(flask_http_request_total{status=~"5.."}[5m]))) / (sum(rate(flask_http_request_total[5m])) + 1)

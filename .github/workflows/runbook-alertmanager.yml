@@ -8,11 +8,9 @@ on:
       service:
         description: "Service to restart"
         required: false
-        default: "auth-service"
       namespace:
         description: "Kubernetes namespace"
         required: false
-        default: "application"
 
 jobs:
   restart:
@@ -35,7 +33,7 @@ jobs:
 
       - name: 🔄 Restart failing service
         env:
-          SERVICE: ${{ github.event.client_payload.service || inputs.service || 'auth-service' }}
+          SERVICE: ${{ github.event.client_payload.app }}
           NAMESPACE: ${{ github.event.client_payload.namespace || inputs.namespace || 'application' }}
         run: |
           echo "Restarting $SERVICE in namespace $NAMESPACE"
