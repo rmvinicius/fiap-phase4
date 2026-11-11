@@ -14,6 +14,7 @@ on:
 
 jobs:
   restart:
+    name: "Restart ${{ github.event.client_payload.app }}"
     runs-on: [self-hosted, eks, private]
     steps:
       - name: 🔧 Configure AWS
