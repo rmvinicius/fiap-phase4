@@ -162,7 +162,13 @@ def webhook():
         alert_annotations = alert.get("annotations", {})
 
         # Extrai o app da label do alerta (ex: auth-service, evaluation-service)
-        app = alert_labels.get("app") or common_labels.get("app", "unknown")
+        # Suporta tanto a label 'app' (novo) quanto 'service' (compatibilidade)
+        app = (
+            alert_labels.get("app") or
+            alert_labels.get("service") or
+            common_labels.get("app") or
+            common_labels.get("service", "unknown")
+        )
         namespace = alert_labels.get("namespace") or common_labels.get("namespace", "application")
         alertname = alert_labels.get("alertname") or common_labels.get("alertname", "High5xxErrorRate")
 
@@ -172,6 +178,7 @@ def webhook():
             "event_type": EVENT_TYPE,
             "client_payload": {
                 "app": app,
+                "service": app,
                 "namespace": namespace,
                 "alertname": alertname,
                 "status": data.get("status", ""),

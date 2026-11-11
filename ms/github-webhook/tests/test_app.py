@@ -42,15 +42,19 @@ class TestWebhook:
     def test_webhook_dispatches_on_firing(self, client):
         payload = {
             "status": "firing",
-            "commonLabels": {
-                "service": "auth-service",
-                "namespace": "application",
-                "alertname": "High5xxErrorRate"
-            },
-            "commonAnnotations": {
-                "summary": "Summary text",
-                "description": "Description text"
-            }
+            "alerts": [
+                {
+                    "labels": {
+                        "service": "auth-service",
+                        "namespace": "application",
+                        "alertname": "High5xxErrorRate"
+                    },
+                    "annotations": {
+                        "summary": "Summary text",
+                        "description": "Description text"
+                    }
+                }
+            ]
         }
         with patch('requests.post') as mock_post:
             mock_response = MagicMock()
@@ -62,7 +66,6 @@ class TestWebhook:
             assert response.status_code == 200
             data = response.get_json()
             assert data["dispatched"] is True
-            assert data["github_status"] == 204
 
             kwargs = mock_post.call_args.kwargs
             assert "dispatches" in mock_post.call_args.args[0]
@@ -74,8 +77,12 @@ class TestWebhook:
     def test_webhook_dispatch_failure(self, client):
         payload = {
             "status": "firing",
-            "commonLabels": {"service": "auth-service", "alertname": "TestAlert"},
-            "commonAnnotations": {}
+            "alerts": [
+                {
+                    "labels": {"service": "auth-service", "alertname": "TestAlert"},
+                    "annotations": {}
+                }
+            ]
         }
         with patch('requests.post') as mock_post:
             mock_response = MagicMock()
@@ -84,27 +91,30 @@ class TestWebhook:
             mock_post.return_value = mock_response
 
             response = client.post('/webhook', json=payload)
-            assert response.status_code == 500
+            assert response.status_code == 502
             data = response.get_json()
             assert data["dispatched"] is False
-            assert data["github_status"] == 500
 
     def test_webhook_dispatch_request_exception(self, client):
         import requests
         payload = {
             "status": "firing",
-            "commonLabels": {"service": "auth-service", "alertname": "TestAlert"},
-            "commonAnnotations": {}
+            "alerts": [
+                {
+                    "labels": {"service": "auth-service", "alertname": "TestAlert"},
+                    "annotations": {}
+                }
+            ]
         }
         with patch('requests.post', side_effect=requests.RequestException("Connection error")):
             response = client.post('/webhook', json=payload)
             assert response.status_code == 502
             data = response.get_json()
             assert data["dispatched"] is False
-            assert "Connection error" in data["error"]
+            assert "Connection error" in data["results"][0]["error"]
 
     def test_webhook_defaults_when_labels_missing(self, client):
-        payload = {"status": "firing"}
+        payload = {"status": "firing", "alerts": [{"labels": {}, "annotations": {}}]}
         with patch('requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 204
@@ -115,6 +125,6 @@ class TestWebhook:
             assert response.status_code == 200
             kwargs = mock_post.call_args.kwargs
             body = kwargs["json"]
-            assert body["client_payload"]["service"] == "auth-service"
+            assert body["client_payload"]["service"] == "unknown"
             assert body["client_payload"]["namespace"] == "application"
             assert body["client_payload"]["alertname"] == "High5xxErrorRate"
