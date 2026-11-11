@@ -100,6 +100,8 @@
 * Sempres que iniciar o LAB:
     * Atualizar AWS Credentials nos microserviços
     * Atualizar as credenciais no github
+    * Atualizar a secret do github-webhook direto no cluster
+    * remover os PVCs e redeployar o grafana e prometheus
 
 * Validar as chamadas
 
@@ -142,19 +144,19 @@
     Contact points → Add contact point → Slack
     Contact points → Add contact point → Webhook URL: http://grafana-github-relay.monitoring.svc.cluster.local/webhook
 
+* Retirar sync do argocd na secret do github-webhook. = OK
+
+* Testar o webhook para ver se gera o github actions = OK
+
+* Criar conta no pagerduty = OK
+
 -----
 
 # O que falta
 
-* Retirar sync do argocd na secret do github-webhook. = OK
-
-* Testar o webhook para ver se gera o github actions
-
-* Melhorar o dashboard do http status
-
 * Criar o alert para cada serviço
 
-* Criar conta no pagerduty = OK
+* Melhorar o dashboard do http status
 
 * Configurar notificação para envio pro Slack, Discord ou teams
 
