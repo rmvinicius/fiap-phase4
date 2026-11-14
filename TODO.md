@@ -77,11 +77,11 @@
 
 * Executar as pipelines:
     * Helm CI/CD
-    * Install Keda
     * Micro service / ALL
-    * Install Ingress Nginx
+    * Install Keda
     * Install Argo CD
     * Install Monitoring Stack
+    * Install Ingress Nginx
 
 * Configurar ARGO CD
     * Acessar o argo cd pela url do load balancer/
