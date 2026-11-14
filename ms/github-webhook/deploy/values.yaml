@@ -10,7 +10,7 @@ resources:
     cpu: "100m"
     memory: "128Mi"
 image:
-  repository: 218443855829.dkr.ecr.us-east-1.amazonaws.com
+  repository: 566588798505.dkr.ecr.us-east-1.amazonaws.com
   name: github-webhook
   tag: "v1.0.0-c25b08d22e398f81413343cbe42f9d783b01f67e-DEV"
   pullPolicy: IfNotPresent
