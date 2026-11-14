@@ -145,8 +145,8 @@ eks_node_groups = [
     max_size      = 4
   }
 ]
-eks_role_arn      = "arn:aws:iam::218443855829:role/LabRole"
-eks_principal_arn = "arn:aws:iam::218443855829:role/voclabs"
+eks_role_arn      = "arn:aws:iam::566588798505:role/LabRole"
+eks_principal_arn = "arn:aws:iam::566588798505:role/voclabs"
 eks_capacity_type = "SPOT"
 
 ### DYNAMODB
