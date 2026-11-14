@@ -12,7 +12,7 @@ resources:
 image:
   repository: 566588798505.dkr.ecr.us-east-1.amazonaws.com
   name: targeting-service
-  tag: "v1.0.0-163aa7521ab03681c2b5b8279a889c8a9c84c4ec-DEV"
+  tag: "v1.0.0-5252da2e26a817de98d84f35b624f615f1327620-DEV"
   pullPolicy: IfNotPresent
 configmap:
   AUTH_SERVICE_URL: "http://auth-service-svc.application.svc.cluster.local:8001"
