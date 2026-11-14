@@ -12,7 +12,7 @@ resources:
 image:
   repository: 566588798505.dkr.ecr.us-east-1.amazonaws.com
   name: github-webhook
-  tag: "v1.0.0-c25b08d22e398f81413343cbe42f9d783b01f67e-DEV"
+  tag: "v1.0.0-163aa7521ab03681c2b5b8279a889c8a9c84c4ec-DEV"
   pullPolicy: IfNotPresent
 configmap:
   PORT: "8080"
