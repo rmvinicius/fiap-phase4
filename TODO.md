@@ -23,6 +23,7 @@
 # Execuções
 
 * Ajustado no terraform a labrole para o EKS
+* Criar bucket s3 para estado do terraform
 * Adicionado as senhas do banco nas secrets do github actions
 * Adicionado as credenciais de autenticação na aws no github actions
 * Criado a branch develop
