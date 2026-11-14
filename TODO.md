@@ -87,7 +87,7 @@
     * Acessar o argo cd pela url do load balancer/
         * A senha esta disponível: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
     * Configurar o repositório:
-        argocd repo add https://github.com/rmvinicius/fiap-phase3.git \
+        argocd repo add https://github.com/rmvinicius/fiap-phase4.git \
         --username <your-github-username> \
         --password <your-github-token> \
         --upsert
@@ -95,7 +95,7 @@
         Method 2: Via ArgoCD UI
         Settings → Repositories → Connect Repo
         Type: Git
-        Repository URL: https://github.com/rmvinicius/fiap-phase3.git
+        Repository URL: https://github.com/rmvinicius/fiap-phase4.git
         Username: Your GitHub username
         Password: Personal Access Token (PAT) with repo scope
         Click Connect

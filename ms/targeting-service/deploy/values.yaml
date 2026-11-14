@@ -10,7 +10,7 @@ resources:
     cpu: "100m"
     memory: "256Mi"
 image:
-  repository: 566588798505.dkr.ecr.us-east-1.amazonaws.com/analytics-service
+  repository: 566588798505.dkr.ecr.us-east-1.amazonaws.com
   name: targeting-service
   tag: "v1.0.0-163aa7521ab03681c2b5b8279a889c8a9c84c4ec-DEV"
   pullPolicy: IfNotPresent
