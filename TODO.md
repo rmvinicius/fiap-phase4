@@ -153,7 +153,7 @@
     sum by(app) (rate(http_requests_total{app!="",status=~"5.."}[5m])) / (sum by(app) (rate(http_requests_total[5m]) + 1))
 
     # Python applications
-    sum by(app) (rate(flask_http_requests_total{app!="",status=~"5.."}[5m])) / (sum by(app) (rate(flask_http_requests_total[5m]) + 1))
+    sum by(app) (rate(flask_http_request_total{app!="",status=~"5.."}[5m])) / (sum by(app) (rate(flask_http_request_total[5m]) + 1))
 
     Condição: When Query is above → 0.05.
 
